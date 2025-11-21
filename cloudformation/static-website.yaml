@@ -131,9 +131,6 @@ Resources:
               - 'kms:GenerateDataKey*'
               - 'kms:DescribeKey'
             Resource: '*'
-            Condition:
-              ArnEquals:
-                'kms:EncryptionContext:aws:logs:arn': !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/cloudfront/${Environment}-troop202'
       Tags:
         - Key: Environment
           Value: !Ref Environment
