@@ -22,12 +22,6 @@ on:
     paths:
       - 'cloudformation/**'
       - '.github/workflows/deploy-infrastructure.yml'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'cloudformation/**'
-      - '.github/workflows/deploy-infrastructure.yml'
 
 env:
   AWS_REGION: us-east-1
@@ -269,9 +263,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "### 📋 Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. Update DNS records to point to CloudFront distribution" >> $GITHUB_STEP_SUMMARY
-          echo "2. Upload website content to S3 bucket: \`${BUCKET_NAME}\`" >> $GITHUB_STEP_SUMMARY
-          echo "3. Verify SSL certificate and website functionality" >> $GITHUB_STEP_SUMMARY
+          echo "1. ✅ Infrastructure deployed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "2. 🚀 Content deployment will start automatically" >> $GITHUB_STEP_SUMMARY
+          echo "3. 📝 Update DNS records to point to CloudFront distribution" >> $GITHUB_STEP_SUMMARY
+          echo "4. ✨ Website will be live at https://${{ env.DOMAIN_NAME }}" >> $GITHUB_STEP_SUMMARY
 
   cleanup-on-failure:
     name: Cleanup on Failure

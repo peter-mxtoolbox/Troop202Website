@@ -17,12 +17,13 @@ on:
         required: false
         default: true
         type: boolean
-  push:
+  workflow_run:
+    workflows: ["Deploy Infrastructure"]
+    types:
+      - completed
     branches:
       - main
-    paths:
-      - 'website/**'
-  pull_request:
+  push:
     branches:
       - main
     paths:
@@ -39,7 +40,10 @@ jobs:
   deploy-content:
     name: Deploy Website Content
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: |
+      github.event_name == 'workflow_dispatch' || 
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     environment: ${{ github.event.inputs.environment || 'prod' }}
     steps:
       - name: Checkout code
