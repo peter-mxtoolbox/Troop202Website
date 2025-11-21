@@ -1,0 +1,158 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFront distribution and policies for Troop 202 website'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: 'prod'
+    AllowedValues: ['dev', 'staging', 'prod']
+    Description: 'Environment name for resource naming'
+  
+  DomainName:
+    Type: String
+    Default: 'troop202.site'
+    Description: 'Primary domain name for the website'
+  
+  PriceClass:
+    Type: String
+    Default: 'PriceClass_100'
+    AllowedValues: ['PriceClass_All', 'PriceClass_200', 'PriceClass_100']
+    Description: 'CloudFront price class for geographic distribution'
+  
+  IndexDocument:
+    Type: String
+    Default: 'index.html'
+    Description: 'Default document for the website'
+  
+  ErrorDocument:
+    Type: String
+    Default: 'error.html'
+    Description: 'Error document for 404 errors'
+  
+  FoundationStackName:
+    Type: String
+    Default: 'troop202-foundation'
+    Description: 'Name of the foundation stack to import resources from'
+
+Resources:
+  # S3 Bucket Policy for CloudFront access
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: 
+        Fn::ImportValue: !Sub '${FoundationStackName}-WebsiteBucket'
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipal
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: 's3:GetObject'
+            Resource: !Sub 
+              - '${BucketArn}/*'
+              - BucketArn:
+                  Fn::ImportValue: !Sub '${FoundationStackName}-WebsiteBucketArn'
+            Condition:
+              StringEquals:
+                'aws:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
+
+  # Response Headers Policy for security
+  ResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub '${Environment}-troop202-security-headers'
+        SecurityHeadersConfig:
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 31536000
+            IncludeSubdomains: true
+            Preload: true
+            Override: true
+          ContentTypeOptions:
+            Override: true
+          FrameOptions:
+            FrameOption: DENY
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: 'strict-origin-when-cross-origin'
+            Override: true
+          ContentSecurityPolicy:
+            ContentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'"
+            Override: true
+
+  # CloudFront Distribution
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref DomainName
+          - !Sub 'www.${DomainName}'
+        Comment: !Sub '${Environment} Static website for Troop 202'
+        DefaultCacheBehavior:
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD, OPTIONS]
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # Managed-CachingOptimized
+          OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf  # Managed-CORS-S3Origin
+          ResponseHeadersPolicyId: !Ref ResponseHeadersPolicy
+          Compress: true
+        DefaultRootObject: !Ref IndexDocument
+        Enabled: true
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        Origins:
+          - Id: S3Origin
+            DomainName:
+              Fn::ImportValue: !Sub '${FoundationStackName}-WebsiteBucketDomainName'
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+            OriginAccessControlId:
+              Fn::ImportValue: !Sub '${FoundationStackName}-OriginAccessControlId'
+        PriceClass: !Ref PriceClass
+        ViewerCertificate:
+          AcmCertificateArn: !Sub '{{resolve:ssm:/troop202/${Environment}/ssl-certificate-arn}}'
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ResponseCode: 404
+            ResponsePagePath: !Sub '/${ErrorDocument}'
+            ErrorCachingMinTTL: 300
+          - ErrorCode: 403
+            ResponseCode: 404
+            ResponsePagePath: !Sub '/${ErrorDocument}'
+            ErrorCachingMinTTL: 300
+        Logging:
+          Bucket:
+            Fn::ImportValue: !Sub '${FoundationStackName}-CloudFrontLogsBucketDomainName'
+          IncludeCookies: false
+          Prefix: 'cloudfront-logs/'
+        WebACLId:
+          Fn::ImportValue: !Sub '${FoundationStackName}-WebACLArn'
+      Tags:
+        - Key: Name
+          Value: !Sub '${Environment}-troop202-cloudfront'
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: 'CloudFormation'
+
+Outputs:
+  CloudFrontDistributionId:
+    Description: 'CloudFront Distribution ID'
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: !Sub '${AWS::StackName}-DistributionId'
+  
+  CloudFrontDistributionDomainName:
+    Description: 'CloudFront Distribution Domain Name'
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-DistributionDomainName'
+  
+  WebsiteURL:
+    Description: 'Website URL'
+    Value: !Sub 'https://${DomainName}'

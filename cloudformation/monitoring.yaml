@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Monitoring and logging for Troop 202 website - CloudWatch logs and dashboard'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: 'prod'
+    AllowedValues: ['dev', 'staging', 'prod']
+    Description: 'Environment name for resource naming'
+  
+  FoundationStackName:
+    Type: String
+    Default: 'troop202-foundation'
+    Description: 'Name of the foundation stack to import resources from'
+  
+  CloudFrontStackName:
+    Type: String
+    Default: 'troop202-cloudfront'
+    Description: 'Name of the CloudFront stack to import resources from'
+
+Resources:
+  # CloudWatch Log Group for general monitoring
+  WebsiteLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/cloudfront/${Environment}-troop202'
+      RetentionInDays: 30
+      KmsKeyId:
+        Fn::ImportValue: !Sub '${FoundationStackName}-LogGroupKMSKeyArn'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: 'CloudFormation'
+
+  # CloudWatch Log Group for CloudFront access logs
+  CloudFrontLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/cloudfront/access/${Environment}-troop202'
+      RetentionInDays: 90
+      KmsKeyId:
+        Fn::ImportValue: !Sub '${FoundationStackName}-LogGroupKMSKeyArn'
+      Tags:
+        - Key: Name
+          Value: !Sub '${Environment}-troop202-cloudfront-logs'
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: 'CloudFormation'
+
+  # CloudWatch Dashboard
+  MonitoringDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub '${Environment}-Troop202-Website'
+      DashboardBody: !Sub 
+        - |
+          {
+            "widgets": [
+              {
+                "type": "metric",
+                "x": 0,
+                "y": 0,
+                "width": 12,
+                "height": 6,
+                "properties": {
+                  "metrics": [
+                    [ "AWS/CloudFront", "Requests", "DistributionId", "${DistributionId}" ],
+                    [ ".", "BytesDownloaded", ".", "." ],
+                    [ ".", "4xxErrorRate", ".", "." ],
+                    [ ".", "5xxErrorRate", ".", "." ]
+                  ],
+                  "period": 300,
+                  "stat": "Sum",
+                  "region": "us-east-1",
+                  "title": "CloudFront Metrics"
+                }
+              },
+              {
+                "type": "metric",
+                "x": 12,
+                "y": 0,
+                "width": 12,
+                "height": 6,
+                "properties": {
+                  "metrics": [
+                    [ "AWS/WAFV2", "AllowedRequests", "WebACL", "${WebACLArn}", "Rule", "ALL", "Region", "CloudFront" ],
+                    [ ".", "BlockedRequests", ".", ".", ".", ".", ".", "." ]
+                  ],
+                  "period": 300,
+                  "stat": "Sum",
+                  "region": "us-east-1",
+                  "title": "WAF Metrics"
+                }
+              }
+            ]
+          }
+        - DistributionId:
+            Fn::ImportValue: !Sub '${CloudFrontStackName}-DistributionId'
+          WebACLArn:
+            Fn::ImportValue: !Sub '${FoundationStackName}-WebACLArn'
+
+Outputs:
+  WebsiteLogGroup:
+    Description: 'CloudWatch Log Group for general website monitoring'
+    Value: !Ref WebsiteLogGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-WebsiteLogGroup'
+  
+  CloudFrontLogGroup:
+    Description: 'CloudWatch Log Group for CloudFront access logs'
+    Value: !Ref CloudFrontLogGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-CloudFrontLogGroup'
+  
+  MonitoringDashboardURL:
+    Description: 'CloudWatch Dashboard URL'
+    Value: !Sub 'https://console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=${MonitoringDashboard}'
