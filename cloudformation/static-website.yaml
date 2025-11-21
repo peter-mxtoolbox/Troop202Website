@@ -67,11 +67,6 @@ Resources:
             Status: Enabled
             NoncurrentVersionExpiration:
               NoncurrentDays: 30
-      NotificationConfiguration:
-        CloudWatchConfigurations:
-          - Event: 's3:ObjectCreated:*'
-            CloudWatchConfiguration:
-              LogGroupName: !Ref WebsiteLogGroup
       Tags:
         - Key: Name
           Value: !Sub '${Environment}-troop202-website'
@@ -96,7 +91,7 @@ Resources:
             Resource: !Sub '${WebsiteBucket}/*'
             Condition:
               StringEquals:
-                'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
+                'aws:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
 
   # CloudWatch Log Group for monitoring
   WebsiteLogGroup:
@@ -163,6 +158,7 @@ Resources:
             AccessControlMaxAgeSec: 31536000
             IncludeSubdomains: true
             Preload: true
+            Override: true
           ContentTypeOptions:
             Override: true
           FrameOptions:
@@ -173,7 +169,7 @@ Resources:
             Override: true
         CustomHeadersConfig:
           Items:
-            - Header: 'X-Content-Security-Policy'
+            - Header: 'Content-Security-Policy'
               Value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'"
               Override: true
 
@@ -202,8 +198,6 @@ Resources:
         Origins:
           - Id: S3Origin
             DomainName: !GetAtt WebsiteBucket.RegionalDomainName
-            S3OriginConfig:
-              OriginAccessIdentity: ''
             OriginAccessControlId: !Ref OriginAccessControl
         PriceClass: !Ref PriceClass
         ViewerCertificate:
