@@ -167,11 +167,9 @@ Resources:
           ReferrerPolicy:
             ReferrerPolicy: 'strict-origin-when-cross-origin'
             Override: true
-        CustomHeadersConfig:
-          Items:
-            - Header: 'Content-Security-Policy'
-              Value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'"
-              Override: true
+          ContentSecurityPolicy:
+            ContentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'"
+            Override: true
 
   # CloudFront Distribution
   CloudFrontDistribution:
