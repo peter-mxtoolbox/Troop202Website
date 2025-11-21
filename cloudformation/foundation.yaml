@@ -7,6 +7,21 @@ Parameters:
     Default: 'prod'
     AllowedValues: ['dev', 'staging', 'prod']
     Description: 'Environment name for resource naming'
+  
+  Project:
+    Type: String
+    Default: 'Troop202Website'
+    Description: 'Project name for tagging'
+  
+  Repository:
+    Type: String
+    Default: 'peter-mxtoolbox/Troop202Website'
+    Description: 'GitHub repository for tagging'
+  
+  CommitSha:
+    Type: String
+    Default: 'unknown'
+    Description: 'Git commit SHA for tagging'
 
 Resources:
   # Origin Access Control for CloudFront to access S3
@@ -109,11 +124,27 @@ Resources:
               - 'kms:GenerateDataKey*'
               - 'kms:DescribeKey'
             Resource: '*'
+          - Sid: Allow CloudFormation Service
+            Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action:
+              - 'kms:TagResource'
+              - 'kms:UntagResource'
+              - 'kms:ListResourceTags'
+              - 'kms:DescribeKey'
+            Resource: '*'
       Tags:
         - Key: Environment
           Value: !Ref Environment
         - Key: ManagedBy
           Value: 'CloudFormation'
+        - Key: Project
+          Value: !Ref Project
+        - Key: Repository
+          Value: !Ref Repository
+        - Key: CommitSha
+          Value: !Ref CommitSha
 
   # KMS Key Alias
   LogGroupKMSKeyAlias:
