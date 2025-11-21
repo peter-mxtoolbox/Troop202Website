@@ -168,8 +168,11 @@
         "kms:PutKeyPolicy",
         "kms:TagResource",
         "kms:UntagResource",
+        "kms:ListResourceTags",
         "kms:ListAliases",
-        "kms:ListKeys"
+        "kms:ListKeys",
+        "kms:ScheduleKeyDeletion",
+        "kms:CancelKeyDeletion"
       ],
       "Resource": "*"
     },

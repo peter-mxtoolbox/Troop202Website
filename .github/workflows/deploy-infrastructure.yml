@@ -212,6 +212,9 @@ jobs:
             --region ${{ env.AWS_REGION }} \
             --parameter-overrides \
               Environment="$ENVIRONMENT" \
+              Project="Troop202Website" \
+              Repository="${{ github.repository }}" \
+              CommitSha="${{ github.sha }}" \
             --capabilities CAPABILITY_IAM \
             --tags \
               Environment="$ENVIRONMENT" \
