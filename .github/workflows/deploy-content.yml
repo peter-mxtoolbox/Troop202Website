@@ -1,0 +1,189 @@
+name: Deploy Website Content
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+        - dev
+        - staging
+        - prod
+      invalidate_cache:
+        description: 'Invalidate CloudFront cache after deployment'
+        required: false
+        default: true
+        type: boolean
+  push:
+    branches:
+      - main
+    paths:
+      - 'website/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'website/**'
+
+env:
+  AWS_REGION: us-east-1
+
+permissions:
+  id-token: write   # Required for OIDC
+  contents: read    # Required to checkout code
+
+jobs:
+  deploy-content:
+    name: Deploy Website Content
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions-Content
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 1800
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+            echo "INVALIDATE_CACHE=${{ github.event.inputs.invalidate_cache }}" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+            echo "INVALIDATE_CACHE=true" >> $GITHUB_ENV
+          fi
+
+      - name: Get S3 bucket name and CloudFront distribution ID
+        id: get-resources
+        run: |
+          WEBSITE_STACK_NAME="troop202-website-${ENVIRONMENT}"
+          
+          # Get S3 bucket name
+          BUCKET_NAME=$(aws cloudformation describe-stacks \
+            --stack-name "$WEBSITE_STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].Outputs[?OutputKey==`WebsiteBucketName`].OutputValue' \
+            --output text)
+          
+          if [ -z "$BUCKET_NAME" ]; then
+            echo "❌ Could not find S3 bucket. Make sure infrastructure is deployed first."
+            exit 1
+          fi
+          
+          # Get CloudFront distribution ID
+          DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+            --stack-name "$WEBSITE_STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontDistributionId`].OutputValue' \
+            --output text)
+          
+          if [ -z "$DISTRIBUTION_ID" ]; then
+            echo "❌ Could not find CloudFront distribution. Make sure infrastructure is deployed first."
+            exit 1
+          fi
+          
+          echo "bucket-name=$BUCKET_NAME" >> $GITHUB_OUTPUT
+          echo "distribution-id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
+          
+          echo "✅ Found S3 bucket: $BUCKET_NAME"
+          echo "✅ Found CloudFront distribution: $DISTRIBUTION_ID"
+
+      - name: Validate website content
+        run: |
+          if [ ! -d "website" ]; then
+            echo "❌ Website directory not found"
+            exit 1
+          fi
+          
+          if [ ! -f "website/index.html" ]; then
+            echo "❌ index.html not found in website directory"
+            exit 1
+          fi
+          
+          echo "✅ Website content validation passed"
+
+      - name: Sync website content to S3
+        run: |
+          BUCKET_NAME="${{ steps.get-resources.outputs.bucket-name }}"
+          
+          echo "🚀 Syncing website content to S3 bucket: $BUCKET_NAME"
+          
+          aws s3 sync website/ s3://$BUCKET_NAME/ \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --metadata-directive REPLACE \
+            --exclude "*.html" \
+            --exclude "*.json" \
+            --exclude "*.xml" \
+            --exclude "*.txt"
+          
+          # Upload HTML files with shorter cache control
+          aws s3 sync website/ s3://$BUCKET_NAME/ \
+            --cache-control "public, max-age=0, must-revalidate" \
+            --content-type "text/html" \
+            --metadata-directive REPLACE \
+            --exclude "*" \
+            --include "*.html"
+          
+          # Upload JSON, XML, and TXT files with no cache
+          aws s3 sync website/ s3://$BUCKET_NAME/ \
+            --cache-control "public, max-age=0, must-revalidate" \
+            --metadata-directive REPLACE \
+            --exclude "*" \
+            --include "*.json" \
+            --include "*.xml" \
+            --include "*.txt"
+          
+          echo "✅ Website content synced successfully"
+
+      - name: Invalidate CloudFront cache
+        if: ${{ (github.event.inputs.invalidate_cache == 'true') || (github.event_name == 'push') }}
+        run: |
+          DISTRIBUTION_ID="${{ steps.get-resources.outputs.distribution-id }}"
+          
+          echo "🔄 Creating CloudFront invalidation for distribution: $DISTRIBUTION_ID"
+          
+          INVALIDATION_ID=$(aws cloudfront create-invalidation \
+            --distribution-id $DISTRIBUTION_ID \
+            --paths "/*" \
+            --query 'Invalidation.Id' \
+            --output text)
+          
+          echo "✅ CloudFront invalidation created: $INVALIDATION_ID"
+          echo "⏳ Invalidation typically takes 10-15 minutes to complete"
+
+      - name: Deployment Summary
+        run: |
+          BUCKET_NAME="${{ steps.get-resources.outputs.bucket-name }}"
+          DISTRIBUTION_ID="${{ steps.get-resources.outputs.distribution-id }}"
+          
+          echo "## 🚀 Content Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Environment: \`${ENVIRONMENT}\`" >> $GITHUB_STEP_SUMMARY
+          echo "### S3 Bucket: \`${BUCKET_NAME}\`" >> $GITHUB_STEP_SUMMARY
+          echo "### CloudFront Distribution: \`${DISTRIBUTION_ID}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$INVALIDATE_CACHE" == "true" ]; then
+            echo "### ✅ Actions Completed" >> $GITHUB_STEP_SUMMARY
+            echo "- Website content synced to S3" >> $GITHUB_STEP_SUMMARY
+            echo "- CloudFront cache invalidated" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ✅ Actions Completed" >> $GITHUB_STEP_SUMMARY
+            echo "- Website content synced to S3" >> $GITHUB_STEP_SUMMARY
+            echo "- CloudFront cache invalidation skipped" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 Website should be live at:" >> $GITHUB_STEP_SUMMARY
+          echo "- https://troop202.site" >> $GITHUB_STEP_SUMMARY
