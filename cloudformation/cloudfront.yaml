@@ -33,6 +33,10 @@ Parameters:
     Type: String
     Default: 'troop202-foundation'
     Description: 'Name of the foundation stack to import resources from'
+  
+  HostedZoneId:
+    Type: String
+    Description: 'Route 53 hosted zone ID for the domain'
 
 Resources:
   # S3 Bucket Policy for CloudFront access
@@ -140,6 +144,30 @@ Resources:
         - Key: ManagedBy
           Value: 'CloudFormation'
 
+  # Route 53 DNS Records
+  DNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2  # CloudFront hosted zone ID (global)
+        EvaluateTargetHealth: false
+
+  # WWW subdomain redirect
+  WWWDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub 'www.${DomainName}'
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2  # CloudFront hosted zone ID (global)
+        EvaluateTargetHealth: false
+
 Outputs:
   CloudFrontDistributionId:
     Description: 'CloudFront Distribution ID'
@@ -156,3 +184,15 @@ Outputs:
   WebsiteURL:
     Description: 'Website URL'
     Value: !Sub 'https://${DomainName}'
+  
+  DNSRecordName:
+    Description: 'Main DNS record name'
+    Value: !Ref DNSRecord
+    Export:
+      Name: !Sub '${AWS::StackName}-DNSRecord'
+  
+  WWWDNSRecordName:
+    Description: 'WWW DNS record name'
+    Value: !Ref WWWDNSRecord
+    Export:
+      Name: !Sub '${AWS::StackName}-WWWDNSRecord'
