@@ -1,0 +1,308 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+        - dev
+        - staging
+        - prod
+      hosted_zone_id:
+        description: 'Route 53 Hosted Zone ID for troop202.site'
+        required: true
+        type: string
+  push:
+    branches:
+      - main
+    paths:
+      - 'cloudformation/**'
+      - '.github/workflows/deploy-infrastructure.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'cloudformation/**'
+      - '.github/workflows/deploy-infrastructure.yml'
+
+env:
+  AWS_REGION: us-east-1
+  DOMAIN_NAME: troop202.site
+
+permissions:
+  id-token: write   # Required for OIDC
+  contents: read    # Required to checkout code
+
+jobs:
+  validate:
+    name: Validate CloudFormation Templates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions-Validate
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+
+      - name: Validate SSL Certificate Template
+        run: |
+          aws cloudformation validate-template \
+            --template-body file://cloudformation/ssl-certificate.yaml
+
+      - name: Validate Website Template
+        run: |
+          aws cloudformation validate-template \
+            --template-body file://cloudformation/static-website.yaml
+
+      - name: Install cfn-lint
+        run: |
+          pip install cfn-lint
+
+      - name: Lint CloudFormation Templates
+        run: |
+          cfn-lint cloudformation/*.yaml || true  # Allow to continue even with warnings
+
+  deploy-certificate:
+    name: Deploy SSL Certificate
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    outputs:
+      certificate-deployed: ${{ steps.deploy-cert.outputs.stack-status }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions-Certificate
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+            echo "HOSTED_ZONE_ID=${{ github.event.inputs.hosted_zone_id }}" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+            echo "HOSTED_ZONE_ID=${{ secrets.HOSTED_ZONE_ID }}" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy SSL Certificate Stack
+        id: deploy-cert
+        run: |
+          STACK_NAME="troop202-ssl-cert-${ENVIRONMENT}"
+          
+          echo "Deploying SSL certificate stack: $STACK_NAME"
+          
+          aws cloudformation deploy \
+            --template-file cloudformation/ssl-certificate.yaml \
+            --stack-name "$STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --parameter-overrides \
+              DomainName=${{ env.DOMAIN_NAME }} \
+              SubjectAlternativeNames="*.${{ env.DOMAIN_NAME }}" \
+              HostedZoneId="$HOSTED_ZONE_ID" \
+              Environment="$ENVIRONMENT" \
+            --tags \
+              Environment="$ENVIRONMENT" \
+              Project="Troop202Website" \
+              ManagedBy="GitHubActions" \
+              Repository="${{ github.repository }}" \
+              CommitSha="${{ github.sha }}" \
+            --no-fail-on-empty-changeset
+
+          echo "stack-status=success" >> $GITHUB_OUTPUT
+
+      - name: Wait for Certificate Validation
+        run: |
+          echo "Waiting for SSL certificate validation..."
+          
+          CERT_ARN=$(aws ssm get-parameter \
+            --name "/troop202/${ENVIRONMENT}/ssl-certificate-arn" \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Parameter.Value' \
+            --output text)
+          
+          echo "Certificate ARN: $CERT_ARN"
+          
+          # Wait for certificate to be issued (maximum 30 minutes)
+          MAX_ATTEMPTS=60
+          ATTEMPT=1
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            STATUS=$(aws acm describe-certificate \
+              --certificate-arn "$CERT_ARN" \
+              --region ${{ env.AWS_REGION }} \
+              --query 'Certificate.Status' \
+              --output text)
+            
+            if [ "$STATUS" = "ISSUED" ]; then
+              echo "✅ Certificate validation completed"
+              break
+            elif [ "$STATUS" = "FAILED" ]; then
+              echo "❌ Certificate validation failed"
+              exit 1
+            fi
+            
+            echo "Certificate status: $STATUS (attempt $ATTEMPT/$MAX_ATTEMPTS)"
+            sleep 30
+            ((ATTEMPT++))
+          done
+          
+          if [ $ATTEMPT -gt $MAX_ATTEMPTS ]; then
+            echo "❌ Certificate validation timed out after 30 minutes"
+            exit 1
+          fi
+
+  deploy-website:
+    name: Deploy Website Infrastructure
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-certificate]
+    if: needs.deploy-certificate.outputs.certificate-deployed == 'success'
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions-Website
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy Website Stack
+        run: |
+          STACK_NAME="troop202-website-${ENVIRONMENT}"
+          
+          echo "Deploying website stack: $STACK_NAME"
+          
+          aws cloudformation deploy \
+            --template-file cloudformation/static-website.yaml \
+            --stack-name "$STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --parameter-overrides \
+              Environment="$ENVIRONMENT" \
+              DomainName=${{ env.DOMAIN_NAME }} \
+              PriceClass="PriceClass_100" \
+            --tags \
+              Environment="$ENVIRONMENT" \
+              Project="Troop202Website" \
+              ManagedBy="GitHubActions" \
+              Repository="${{ github.repository }}" \
+              CommitSha="${{ github.sha }}" \
+            --no-fail-on-empty-changeset
+
+      - name: Get Stack Outputs
+        run: |
+          CERT_STACK_NAME="troop202-ssl-cert-${ENVIRONMENT}"
+          WEBSITE_STACK_NAME="troop202-website-${ENVIRONMENT}"
+          
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Environment: \`${ENVIRONMENT}\`" >> $GITHUB_STEP_SUMMARY
+          echo "### Domain: \`${{ env.DOMAIN_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Get certificate ARN
+          CERT_ARN=$(aws cloudformation describe-stacks \
+            --stack-name "$CERT_STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].Outputs[?OutputKey==`CertificateArn`].OutputValue' \
+            --output text)
+          
+          echo "### SSL Certificate" >> $GITHUB_STEP_SUMMARY
+          echo "- **ARN**: \`${CERT_ARN}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Get website outputs
+          BUCKET_NAME=$(aws cloudformation describe-stacks \
+            --stack-name "$WEBSITE_STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].Outputs[?OutputKey==`WebsiteBucketName`].OutputValue' \
+            --output text)
+          
+          DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+            --stack-name "$WEBSITE_STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontDistributionId`].OutputValue' \
+            --output text)
+          
+          DISTRIBUTION_DOMAIN=$(aws cloudformation describe-stacks \
+            --stack-name "$WEBSITE_STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontDistributionDomainName`].OutputValue' \
+            --output text)
+          
+          echo "### Website Infrastructure" >> $GITHUB_STEP_SUMMARY
+          echo "- **S3 Bucket**: \`${BUCKET_NAME}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **CloudFront Distribution ID**: \`${DISTRIBUTION_ID}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **CloudFront Domain**: \`${DISTRIBUTION_DOMAIN}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 🌐 Website URLs" >> $GITHUB_STEP_SUMMARY
+          echo "- **Primary**: https://${{ env.DOMAIN_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **CloudFront**: https://${DISTRIBUTION_DOMAIN}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 📋 Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Update DNS records to point to CloudFront distribution" >> $GITHUB_STEP_SUMMARY
+          echo "2. Upload website content to S3 bucket: \`${BUCKET_NAME}\`" >> $GITHUB_STEP_SUMMARY
+          echo "3. Verify SSL certificate and website functionality" >> $GITHUB_STEP_SUMMARY
+
+  cleanup-on-failure:
+    name: Cleanup on Failure
+    runs-on: ubuntu-latest
+    needs: [deploy-certificate, deploy-website]
+    if: failure() && github.event_name == 'workflow_dispatch'
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    steps:
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions-Cleanup
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+
+      - name: Set environment variables
+        run: |
+          echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+
+      - name: Cleanup Failed Stacks
+        continue-on-error: true
+        run: |
+          echo "🧹 Cleaning up failed deployments..."
+          
+          # Check if website stack exists and delete it
+          if aws cloudformation describe-stacks --stack-name "troop202-website-${ENVIRONMENT}" --region ${{ env.AWS_REGION }} >/dev/null 2>&1; then
+            echo "Deleting website stack..."
+            aws cloudformation delete-stack --stack-name "troop202-website-${ENVIRONMENT}" --region ${{ env.AWS_REGION }}
+            aws cloudformation wait stack-delete-complete --stack-name "troop202-website-${ENVIRONMENT}" --region ${{ env.AWS_REGION }}
+          fi
+          
+          # Note: We don't delete the certificate stack automatically as it might be used by other resources
+          echo "⚠️ Certificate stack was not deleted. Please review and clean up manually if needed."

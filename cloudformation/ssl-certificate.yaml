@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'SSL Certificate for troop202.site with DNS validation and SSM parameter storage'
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: 'troop202.site'
+    Description: 'Domain name for the SSL certificate'
+  
+  SubjectAlternativeNames:
+    Type: CommaDelimitedList
+    Default: '*.troop202.site'
+    Description: 'Additional domain names for the certificate (SAN)'
+  
+  HostedZoneId:
+    Type: String
+    Description: 'Route 53 Hosted Zone ID for DNS validation'
+  
+  Environment:
+    Type: String
+    Default: 'prod'
+    AllowedValues: ['dev', 'staging', 'prod']
+    Description: 'Environment name for resource naming'
+
+Resources:
+  # SSL Certificate with DNS validation
+  SSLCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames: !Ref SubjectAlternativeNames
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref HostedZoneId
+        - DomainName: !Select [0, !Ref SubjectAlternativeNames]
+          HostedZoneId: !Ref HostedZoneId
+      Tags:
+        - Key: Name
+          Value: !Sub '${Environment}-troop202-ssl-cert'
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: 'CloudFormation'
+        - Key: Domain
+          Value: !Ref DomainName
+
+  # SSM Parameter to store certificate ARN for cross-stack reference
+  SSLCertificateArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/troop202/${Environment}/ssl-certificate-arn'
+      Type: String
+      Value: !Ref SSLCertificate
+      Description: !Sub 'SSL Certificate ARN for ${DomainName} in ${Environment} environment'
+      Tags:
+        Environment: !Ref Environment
+        Domain: !Ref DomainName
+        ManagedBy: 'CloudFormation'
+
+  # SSM Parameter to store domain name for reference
+  DomainNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/troop202/${Environment}/domain-name'
+      Type: String
+      Value: !Ref DomainName
+      Description: !Sub 'Primary domain name for ${Environment} environment'
+      Tags:
+        Environment: !Ref Environment
+        ManagedBy: 'CloudFormation'
+
+Outputs:
+  CertificateArn:
+    Description: 'ARN of the SSL Certificate'
+    Value: !Ref SSLCertificate
+    Export:
+      Name: !Sub '${AWS::StackName}-CertificateArn'
+  
+  SSMParameterName:
+    Description: 'SSM Parameter name storing the certificate ARN'
+    Value: !Ref SSLCertificateArnParameter
+    Export:
+      Name: !Sub '${AWS::StackName}-SSMParameterName'
+  
+  DomainName:
+    Description: 'Domain name for the certificate'
+    Value: !Ref DomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-DomainName'
