@@ -210,7 +210,7 @@ jobs:
               CommitSha="${{ github.sha }}" \
             --no-fail-on-empty-changeset
 
-        - name: Get Stack Outputs
+      - name: Get Stack Outputs
         run: |
           CERT_STACK_NAME="troop202-ssl-cert-${ENVIRONMENT}"
           WEBSITE_STACK_NAME="troop202-website-${ENVIRONMENT}"
@@ -266,7 +266,9 @@ jobs:
           echo "1. ✅ Infrastructure deployed successfully" >> $GITHUB_STEP_SUMMARY
           echo "2. 🚀 Content deployment will start automatically" >> $GITHUB_STEP_SUMMARY
           echo "3. 📝 Update DNS records to point to CloudFront distribution" >> $GITHUB_STEP_SUMMARY
-          echo "4. ✨ Website will be live at https://${{ env.DOMAIN_NAME }}" >> $GITHUB_STEP_SUMMARY  cleanup-on-failure:
+          echo "4. ✨ Website will be live at https://${{ env.DOMAIN_NAME }}" >> $GITHUB_STEP_SUMMARY
+
+  cleanup-on-failure:
     name: Cleanup on Failure
     runs-on: ubuntu-latest
     needs: [deploy-certificate, deploy-website]
