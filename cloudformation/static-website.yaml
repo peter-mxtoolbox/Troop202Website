@@ -196,6 +196,8 @@ Resources:
         Origins:
           - Id: S3Origin
             DomainName: !GetAtt WebsiteBucket.RegionalDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ''
             OriginAccessControlId: !Ref OriginAccessControl
         PriceClass: !Ref PriceClass
         ViewerCertificate:
