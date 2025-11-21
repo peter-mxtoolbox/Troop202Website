@@ -53,67 +53,24 @@ Resources:
           - Sid: CloudFormationAccess
             Effect: Allow
             Action:
-              - 'cloudformation:CreateStack'
-              - 'cloudformation:UpdateStack'
-              - 'cloudformation:DeleteStack'
-              - 'cloudformation:DescribeStacks'
-              - 'cloudformation:DescribeStackEvents'
-              - 'cloudformation:DescribeStackResources'
-              - 'cloudformation:GetTemplate'
-              - 'cloudformation:ListStacks'
-              - 'cloudformation:ValidateTemplate'
-              - 'cloudformation:CreateChangeSet'
-              - 'cloudformation:DescribeChangeSet'
-              - 'cloudformation:ExecuteChangeSet'
-              - 'cloudformation:DeleteChangeSet'
-            Resource:
-              - !Sub 'arn:aws:cloudformation:*:${AWS::AccountId}:stack/troop202-*'
-              - !Sub 'arn:aws:cloudformation:*:${AWS::AccountId}:changeSet/*/*'
+              - 'cloudformation:*'
+            Resource: '*'
           
-          - Sid: S3BucketManagement
+          - Sid: S3Access
             Effect: Allow
             Action:
-              - 's3:CreateBucket'
-              - 's3:DeleteBucket'
-              - 's3:GetBucketLocation'
-              - 's3:GetBucketVersioning'
-              - 's3:PutBucketVersioning'
-              - 's3:GetBucketEncryption'
-              - 's3:PutBucketEncryption'
-              - 's3:GetBucketPublicAccessBlock'
-              - 's3:PutBucketPublicAccessBlock'
-              - 's3:GetBucketPolicy'
-              - 's3:PutBucketPolicy'
-              - 's3:DeleteBucketPolicy'
-              - 's3:GetBucketNotification'
-              - 's3:PutBucketNotification'
-              - 's3:GetBucketLifecycleConfiguration'
-              - 's3:PutBucketLifecycleConfiguration'
-              - 's3:GetBucketTagging'
-              - 's3:PutBucketTagging'
-              - 's3:GetBucketCors'
-              - 's3:PutBucketCors'
-              - 's3:GetBucketWebsite'
-              - 's3:PutBucketWebsite'
-              - 's3:DeleteBucketWebsite'
-            Resource:
-              - 'arn:aws:s3:::*troop202*'
-          
-          - Sid: S3ObjectAccess
-            Effect: Allow
-            Action:
-              - 's3:GetObject'
-              - 's3:PutObject'
-              - 's3:DeleteObject'
-              - 's3:GetObjectVersion'
-              - 's3:DeleteObjectVersion'
-              - 's3:ListBucket'
-              - 's3:ListBucketVersions'
-              - 's3:PutObjectAcl'
-              - 's3:GetObjectAcl'
+              - 's3:*'
             Resource:
               - 'arn:aws:s3:::*troop202*'
               - 'arn:aws:s3:::*troop202*/*'
+              - 'arn:aws:s3:::*'
+          
+          - Sid: S3ListAccess
+            Effect: Allow
+            Action:
+              - 's3:ListAllMyBuckets'
+              - 's3:GetBucketLocation'
+            Resource: '*'
           
           - Sid: CloudFrontAccess
             Effect: Allow
@@ -188,19 +145,8 @@ Resources:
           - Sid: CloudWatchAccess
             Effect: Allow
             Action:
-              - 'logs:CreateLogGroup'
-              - 'logs:DeleteLogGroup'
-              - 'logs:PutRetentionPolicy'
-              - 'logs:DescribeLogGroups'
-              - 'logs:TagLogGroup'
-              - 'logs:UntagLogGroup'
-              - 'logs:ListTagsLogGroup'
-              - 'cloudwatch:PutDashboard'
-              - 'cloudwatch:GetDashboard'
-              - 'cloudwatch:DeleteDashboard'
-              - 'cloudwatch:ListDashboards'
-              - 'cloudwatch:PutMetricData'
-              - 'cloudwatch:GetMetricStatistics'
+              - 'logs:*'
+              - 'cloudwatch:*'
             Resource: '*'
           
           - Sid: KMSAccess
@@ -237,7 +183,7 @@ Resources:
             Resource:
               - !Sub 'arn:aws:ssm:*:${AWS::AccountId}:parameter/troop202/*'
           
-          - Sid: IAMReadAccess
+          - Sid: IAMAccess
             Effect: Allow
             Action:
               - 'iam:GetRole'
@@ -245,14 +191,20 @@ Resources:
               - 'iam:ListAttachedRolePolicies'
               - 'iam:ListRolePolicies'
               - 'iam:PassRole'
+              - 'iam:CreateRole'
+              - 'iam:DeleteRole'
+              - 'iam:UpdateRole'
+              - 'iam:AttachRolePolicy'
+              - 'iam:DetachRolePolicy'
+              - 'iam:PutRolePolicy'
+              - 'iam:DeleteRolePolicy'
+              - 'iam:CreatePolicy'
+              - 'iam:DeletePolicy'
+              - 'iam:GetPolicy'
+              - 'iam:ListPolicies'
+              - 'iam:TagRole'
+              - 'iam:UntagRole'
             Resource: '*'
-            Condition:
-              StringEquals:
-                'iam:PassedToService':
-                  - 'cloudformation.amazonaws.com'
-                  - 'lambda.amazonaws.com'
-                  - 's3.amazonaws.com'
-                  - 'cloudfront.amazonaws.com'
 
   # IAM Role for GitHub Actions
   GitHubActionsRole:
