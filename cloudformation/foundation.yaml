@@ -1,0 +1,231 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Foundation infrastructure - S3, KMS, WAF, OAC for Troop 202 website'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: 'prod'
+    AllowedValues: ['dev', 'staging', 'prod']
+    Description: 'Environment name for resource naming'
+
+Resources:
+  # Origin Access Control for CloudFront to access S3
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${Environment}-troop202-oac'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # S3 Bucket for website content
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${Environment}-troop202-website-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+            BucketKeyEnabled: true
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+          - Id: DeleteOldVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 30
+      Tags:
+        - Key: Name
+          Value: !Sub '${Environment}-troop202-website'
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: 'CloudFormation'
+
+  # S3 bucket for CloudFront logs
+  CloudFrontLogsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${Environment}-troop202-cloudfront-logs-${AWS::AccountId}'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldLogs
+            Status: Enabled
+            ExpirationInDays: 90
+      Tags:
+        - Key: Name
+          Value: !Sub '${Environment}-troop202-cloudfront-logs'
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: 'CloudFormation'
+
+  # KMS Key for log encryption
+  LogGroupKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Sub 'KMS Key for ${Environment} troop202 website logs'
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow CloudWatch Logs
+            Effect: Allow
+            Principal:
+              Service: logs.amazonaws.com
+            Action:
+              - 'kms:Encrypt'
+              - 'kms:Decrypt'
+              - 'kms:ReEncrypt*'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: '*'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: 'CloudFormation'
+
+  # KMS Key Alias
+  LogGroupKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub 'alias/${Environment}-troop202-logs'
+      TargetKeyId: !Ref LogGroupKMSKey
+
+  # WAF Web ACL for security
+  WebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: !Sub '${Environment}-troop202-waf'
+      Description: 'WAF rules for Troop 202 website'
+      Scope: CLOUDFRONT
+      DefaultAction:
+        Allow: {}
+      Rules:
+        - Name: AWSManagedRulesCommonRuleSet
+          Priority: 1
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+              ExcludedRules: []
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: CommonRuleSetMetric
+        - Name: AWSManagedRulesKnownBadInputsRuleSet
+          Priority: 2
+          OverrideAction:
+            None: {}
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesKnownBadInputsRuleSet
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: KnownBadInputsRuleSetMetric
+        - Name: RateLimitRule
+          Priority: 3
+          Action:
+            Block: {}
+          Statement:
+            RateBasedStatement:
+              Limit: 2000
+              AggregateKeyType: IP
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: RateLimitRule
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: !Sub '${Environment}Troop202WebACL'
+      Tags:
+        - Key: Name
+          Value: !Sub '${Environment}-troop202-waf'
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: 'CloudFormation'
+
+Outputs:
+  WebsiteBucketName:
+    Description: 'Name of the S3 bucket hosting the website'
+    Value: !Ref WebsiteBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-WebsiteBucket'
+  
+  WebsiteBucketArn:
+    Description: 'ARN of the S3 bucket hosting the website'
+    Value: !GetAtt WebsiteBucket.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-WebsiteBucketArn'
+  
+  WebsiteBucketDomainName:
+    Description: 'Regional domain name of the website bucket'
+    Value: !GetAtt WebsiteBucket.RegionalDomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-WebsiteBucketDomainName'
+  
+  CloudFrontLogsBucketName:
+    Description: 'Name of the S3 bucket for CloudFront logs'
+    Value: !Ref CloudFrontLogsBucket
+    Export:
+      Name: !Sub '${AWS::StackName}-CloudFrontLogsBucket'
+  
+  CloudFrontLogsBucketDomainName:
+    Description: 'Domain name of the CloudFront logs bucket'
+    Value: !GetAtt CloudFrontLogsBucket.DomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-CloudFrontLogsBucketDomainName'
+  
+  OriginAccessControlId:
+    Description: 'Origin Access Control ID for CloudFront'
+    Value: !Ref OriginAccessControl
+    Export:
+      Name: !Sub '${AWS::StackName}-OriginAccessControlId'
+  
+  WebACLArn:
+    Description: 'WAF Web ACL ARN'
+    Value: !GetAtt WebACL.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-WebACLArn'
+  
+  LogGroupKMSKeyArn:
+    Description: 'KMS Key ARN for log encryption'
+    Value: !GetAtt LogGroupKMSKey.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-LogGroupKMSKeyArn'

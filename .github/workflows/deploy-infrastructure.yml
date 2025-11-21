@@ -52,10 +52,20 @@ jobs:
           aws cloudformation validate-template \
             --template-body file://cloudformation/ssl-certificate.yaml
 
-      - name: Validate Website Template
+      - name: Validate Foundation Template
         run: |
           aws cloudformation validate-template \
-            --template-body file://cloudformation/static-website.yaml
+            --template-body file://cloudformation/foundation.yaml
+
+      - name: Validate CloudFront Template
+        run: |
+          aws cloudformation validate-template \
+            --template-body file://cloudformation/cloudfront.yaml
+
+      - name: Validate Monitoring Template
+        run: |
+          aws cloudformation validate-template \
+            --template-body file://cloudformation/monitoring.yaml
 
       - name: Install cfn-lint
         run: |
@@ -161,11 +171,178 @@ jobs:
             exit 1
           fi
 
-  deploy-website:
-    name: Deploy Website Infrastructure
+  deploy-foundation:
+    name: Deploy Foundation Stack (S3, KMS, WAF)
     runs-on: ubuntu-latest
     needs: [validate, deploy-certificate]
     if: needs.deploy-certificate.outputs.certificate-deployed == 'success'
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    outputs:
+      foundation-deployed: ${{ steps.deploy-foundation.outputs.stack-status }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions-Foundation
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy Foundation Stack
+        id: deploy-foundation
+        run: |
+          STACK_NAME="${ENVIRONMENT}-troop202-foundation"
+          
+          echo "🏗️ Deploying foundation stack: $STACK_NAME"
+          
+          aws cloudformation deploy \
+            --template-file cloudformation/foundation.yaml \
+            --stack-name "$STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --parameter-overrides \
+              Environment="$ENVIRONMENT" \
+            --capabilities CAPABILITY_IAM \
+            --tags \
+              Environment="$ENVIRONMENT" \
+              Project="Troop202Website" \
+              ManagedBy="GitHubActions" \
+              Repository="${{ github.repository }}" \
+              CommitSha="${{ github.sha }}" \
+            --no-fail-on-empty-changeset
+
+          echo "stack-status=success" >> $GITHUB_OUTPUT
+          echo "✅ Foundation stack deployed successfully"
+
+  deploy-cloudfront:
+    name: Deploy CloudFront Stack (15-20 min)
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-certificate, deploy-foundation]
+    if: needs.deploy-foundation.outputs.foundation-deployed == 'success'
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    outputs:
+      cloudfront-deployed: ${{ steps.deploy-cloudfront.outputs.stack-status }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions-CloudFront
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy CloudFront Stack
+        id: deploy-cloudfront
+        run: |
+          STACK_NAME="${ENVIRONMENT}-troop202-cloudfront"
+          FOUNDATION_STACK="${ENVIRONMENT}-troop202-foundation"
+          
+          echo "☁️ Deploying CloudFront stack: $STACK_NAME (this takes 15-20 minutes)"
+          
+          aws cloudformation deploy \
+            --template-file cloudformation/cloudfront.yaml \
+            --stack-name "$STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --parameter-overrides \
+              Environment="$ENVIRONMENT" \
+              DomainName=${{ env.DOMAIN_NAME }} \
+              PriceClass="PriceClass_100" \
+              FoundationStackName="$FOUNDATION_STACK" \
+            --capabilities CAPABILITY_IAM \
+            --tags \
+              Environment="$ENVIRONMENT" \
+              Project="Troop202Website" \
+              ManagedBy="GitHubActions" \
+              Repository="${{ github.repository }}" \
+              CommitSha="${{ github.sha }}" \
+            --no-fail-on-empty-changeset
+
+          echo "stack-status=success" >> $GITHUB_OUTPUT
+          echo "✅ CloudFront stack deployed successfully"
+
+  deploy-monitoring:
+    name: Deploy Monitoring Stack (2-3 min)
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-certificate, deploy-foundation, deploy-cloudfront]
+    if: needs.deploy-cloudfront.outputs.cloudfront-deployed == 'success'
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    outputs:
+      monitoring-deployed: ${{ steps.deploy-monitoring.outputs.stack-status }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions-Monitoring
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy Monitoring Stack
+        id: deploy-monitoring
+        run: |
+          STACK_NAME="${ENVIRONMENT}-troop202-monitoring"
+          FOUNDATION_STACK="${ENVIRONMENT}-troop202-foundation"
+          CLOUDFRONT_STACK="${ENVIRONMENT}-troop202-cloudfront"
+          
+          echo "📊 Deploying monitoring stack: $STACK_NAME"
+          
+          aws cloudformation deploy \
+            --template-file cloudformation/monitoring.yaml \
+            --stack-name "$STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --parameter-overrides \
+              Environment="$ENVIRONMENT" \
+              FoundationStackName="$FOUNDATION_STACK" \
+              CloudFrontStackName="$CLOUDFRONT_STACK" \
+            --capabilities CAPABILITY_IAM \
+            --tags \
+              Environment="$ENVIRONMENT" \
+              Project="Troop202Website" \
+              ManagedBy="GitHubActions" \
+              Repository="${{ github.repository }}" \
+              CommitSha="${{ github.sha }}" \
+            --no-fail-on-empty-changeset
+
+          echo "stack-status=success" >> $GITHUB_OUTPUT
+          echo "✅ Monitoring stack deployed successfully"
+
+  deploy-website:
+    name: Get Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-certificate, deploy-foundation, deploy-cloudfront, deploy-monitoring]
+    if: needs.deploy-monitoring.outputs.monitoring-deployed == 'success'
     environment: ${{ github.event.inputs.environment || 'prod' }}
     steps:
       - name: Checkout code
@@ -187,32 +364,12 @@ jobs:
             echo "ENVIRONMENT=prod" >> $GITHUB_ENV
           fi
 
-      - name: Deploy Website Stack
-        run: |
-          STACK_NAME="troop202-website-${ENVIRONMENT}"
-          
-          echo "Deploying website stack: $STACK_NAME"
-          
-          aws cloudformation deploy \
-            --template-file cloudformation/static-website.yaml \
-            --stack-name "$STACK_NAME" \
-            --region ${{ env.AWS_REGION }} \
-            --parameter-overrides \
-              Environment="$ENVIRONMENT" \
-              DomainName=${{ env.DOMAIN_NAME }} \
-              PriceClass="PriceClass_100" \
-            --tags \
-              Environment="$ENVIRONMENT" \
-              Project="Troop202Website" \
-              ManagedBy="GitHubActions" \
-              Repository="${{ github.repository }}" \
-              CommitSha="${{ github.sha }}" \
-            --no-fail-on-empty-changeset
-
-      - name: Get Stack Outputs
+      - name: Get Stack Outputs and Generate Summary
         run: |
           CERT_STACK_NAME="troop202-ssl-cert-${ENVIRONMENT}"
-          WEBSITE_STACK_NAME="troop202-website-${ENVIRONMENT}"
+          FOUNDATION_STACK_NAME="${ENVIRONMENT}-troop202-foundation"
+          CLOUDFRONT_STACK_NAME="${ENVIRONMENT}-troop202-cloudfront"
+          MONITORING_STACK_NAME="${ENVIRONMENT}-troop202-monitoring"
           
           echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -231,29 +388,40 @@ jobs:
           echo "- **ARN**: \`${CERT_ARN}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          # Get website outputs
+          # Get foundation outputs
           BUCKET_NAME=$(aws cloudformation describe-stacks \
-            --stack-name "$WEBSITE_STACK_NAME" \
+            --stack-name "$FOUNDATION_STACK_NAME" \
             --region ${{ env.AWS_REGION }} \
             --query 'Stacks[0].Outputs[?OutputKey==`WebsiteBucketName`].OutputValue' \
             --output text)
           
+          echo "### 🏗️ Foundation Stack" >> $GITHUB_STEP_SUMMARY
+          echo "- **S3 Bucket**: \`${BUCKET_NAME}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ S3, KMS, WAF deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Get CloudFront outputs
           DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
-            --stack-name "$WEBSITE_STACK_NAME" \
+            --stack-name "$CLOUDFRONT_STACK_NAME" \
             --region ${{ env.AWS_REGION }} \
             --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontDistributionId`].OutputValue' \
             --output text)
           
           DISTRIBUTION_DOMAIN=$(aws cloudformation describe-stacks \
-            --stack-name "$WEBSITE_STACK_NAME" \
+            --stack-name "$CLOUDFRONT_STACK_NAME" \
             --region ${{ env.AWS_REGION }} \
             --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontDistributionDomainName`].OutputValue' \
             --output text)
           
-          echo "### Website Infrastructure" >> $GITHUB_STEP_SUMMARY
-          echo "- **S3 Bucket**: \`${BUCKET_NAME}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **CloudFront Distribution ID**: \`${DISTRIBUTION_ID}\`" >> $GITHUB_STEP_SUMMARY
+          echo "### ☁️ CloudFront Stack" >> $GITHUB_STEP_SUMMARY
+          echo "- **Distribution ID**: \`${DISTRIBUTION_ID}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **CloudFront Domain**: \`${DISTRIBUTION_DOMAIN}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Distribution and security headers deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### 📊 Monitoring Stack" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ CloudWatch logs and dashboard deployed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dashboard**: [View Dashboard](https://console.aws.amazon.com/cloudwatch/home?region=${{ env.AWS_REGION }}#dashboards:name=${ENVIRONMENT}-Troop202-Website)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "### 🌐 Website URLs" >> $GITHUB_STEP_SUMMARY
@@ -262,15 +430,20 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "### 📋 Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. ✅ Infrastructure deployed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "1. ✅ All infrastructure deployed successfully" >> $GITHUB_STEP_SUMMARY
           echo "2. 🚀 Content deployment will start automatically" >> $GITHUB_STEP_SUMMARY
           echo "3. 📝 Update DNS records to point to CloudFront distribution" >> $GITHUB_STEP_SUMMARY
           echo "4. ✨ Website will be live at https://${{ env.DOMAIN_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 💡 Development Tips" >> $GITHUB_STEP_SUMMARY
+          echo "- **Foundation changes** (S3, WAF): ~5-10 min redeploy" >> $GITHUB_STEP_SUMMARY
+          echo "- **Monitoring changes**: ~2-3 min redeploy" >> $GITHUB_STEP_SUMMARY
+          echo "- **CloudFront changes**: ~15-20 min redeploy (avoid if possible)" >> $GITHUB_STEP_SUMMARY
 
   cleanup-on-failure:
     name: Cleanup on Failure
     runs-on: ubuntu-latest
-    needs: [deploy-certificate, deploy-website]
+    needs: [deploy-certificate, deploy-foundation, deploy-cloudfront, deploy-monitoring]
     if: failure() && github.event_name == 'workflow_dispatch'
     environment: ${{ github.event.inputs.environment || 'prod' }}
     steps:
@@ -291,12 +464,24 @@ jobs:
         run: |
           echo "🧹 Cleaning up failed deployments..."
           
-          # Check if website stack exists and delete it
-          if aws cloudformation describe-stacks --stack-name "troop202-website-${ENVIRONMENT}" --region ${{ env.AWS_REGION }} >/dev/null 2>&1; then
-            echo "Deleting website stack..."
-            aws cloudformation delete-stack --stack-name "troop202-website-${ENVIRONMENT}" --region ${{ env.AWS_REGION }}
-            aws cloudformation wait stack-delete-complete --stack-name "troop202-website-${ENVIRONMENT}" --region ${{ env.AWS_REGION }}
-          fi
+          # Delete stacks in reverse order
+          STACKS_TO_DELETE=(
+            "${ENVIRONMENT}-troop202-monitoring"
+            "${ENVIRONMENT}-troop202-cloudfront" 
+            "${ENVIRONMENT}-troop202-foundation"
+          )
+          
+          for STACK_NAME in "${STACKS_TO_DELETE[@]}"; do
+            if aws cloudformation describe-stacks --stack-name "$STACK_NAME" --region ${{ env.AWS_REGION }} >/dev/null 2>&1; then
+              echo "Deleting stack: $STACK_NAME"
+              aws cloudformation delete-stack --stack-name "$STACK_NAME" --region ${{ env.AWS_REGION }}
+              echo "Waiting for stack deletion to complete..."
+              aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME" --region ${{ env.AWS_REGION }}
+              echo "✅ Stack $STACK_NAME deleted"
+            else
+              echo "Stack $STACK_NAME not found, skipping"
+            fi
+          done
           
           # Note: We don't delete the certificate stack automatically as it might be used by other resources
           echo "⚠️ Certificate stack was not deleted. Please review and clean up manually if needed."
