@@ -7,21 +7,6 @@ Parameters:
     Default: 'prod'
     AllowedValues: ['dev', 'staging', 'prod']
     Description: 'Environment name for resource naming'
-  
-  Project:
-    Type: String
-    Default: 'Troop202Website'
-    Description: 'Project name for tagging'
-  
-  Repository:
-    Type: String
-    Default: 'peter-mxtoolbox/Troop202Website'
-    Description: 'GitHub repository for tagging'
-  
-  CommitSha:
-    Type: String
-    Default: 'unknown'
-    Description: 'Git commit SHA for tagging'
 
 Resources:
   # Origin Access Control for CloudFront to access S3
@@ -98,60 +83,6 @@ Resources:
           Value: !Ref Environment
         - Key: ManagedBy
           Value: 'CloudFormation'
-
-  # KMS Key for log encryption
-  LogGroupKMSKey:
-    Type: AWS::KMS::Key
-    Properties:
-      Description: !Sub 'KMS Key for ${Environment} troop202 website logs'
-      KeyPolicy:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: Enable IAM User Permissions
-            Effect: Allow
-            Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
-            Action: 'kms:*'
-            Resource: '*'
-          - Sid: Allow CloudWatch Logs
-            Effect: Allow
-            Principal:
-              Service: logs.amazonaws.com
-            Action:
-              - 'kms:Encrypt'
-              - 'kms:Decrypt'
-              - 'kms:ReEncrypt*'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
-            Resource: '*'
-          - Sid: Allow CloudFormation Service
-            Effect: Allow
-            Principal:
-              Service: cloudformation.amazonaws.com
-            Action:
-              - 'kms:TagResource'
-              - 'kms:UntagResource'
-              - 'kms:ListResourceTags'
-              - 'kms:DescribeKey'
-            Resource: '*'
-      Tags:
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: ManagedBy
-          Value: 'CloudFormation'
-        - Key: Project
-          Value: !Ref Project
-        - Key: Repository
-          Value: !Ref Repository
-        - Key: CommitSha
-          Value: !Ref CommitSha
-
-  # KMS Key Alias
-  LogGroupKMSKeyAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub 'alias/${Environment}-troop202-logs'
-      TargetKeyId: !Ref LogGroupKMSKey
 
   # WAF Web ACL for security
   WebACL:
@@ -254,9 +185,3 @@ Outputs:
     Value: !GetAtt WebACL.Arn
     Export:
       Name: !Sub '${AWS::StackName}-WebACLArn'
-  
-  LogGroupKMSKeyArn:
-    Description: 'KMS Key ARN for log encryption'
-    Value: !GetAtt LogGroupKMSKey.Arn
-    Export:
-      Name: !Sub '${AWS::StackName}-LogGroupKMSKeyArn'

@@ -52,6 +52,11 @@ jobs:
           aws cloudformation validate-template \
             --template-body file://cloudformation/ssl-certificate.yaml
 
+      - name: Validate Shared KMS Key Template
+        run: |
+          aws cloudformation validate-template \
+            --template-body file://cloudformation/shared-kms-key.yaml
+
       - name: Validate Foundation Template
         run: |
           aws cloudformation validate-template \
@@ -171,11 +176,64 @@ jobs:
             exit 1
           fi
 
-  deploy-foundation:
-    name: Deploy Foundation Stack (S3, KMS, WAF)
+  deploy-shared-kms:
+    name: Deploy Shared KMS Key (once and done!)
     runs-on: ubuntu-latest
     needs: [validate, deploy-certificate]
     if: needs.deploy-certificate.outputs.certificate-deployed == 'success'
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+    outputs:
+      kms-deployed: ${{ steps.deploy-kms.outputs.stack-status }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-session-name: GitHubActions-SharedKMS
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+
+      - name: Set environment variables
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy Shared KMS Key Stack
+        id: deploy-kms
+        run: |
+          STACK_NAME="troop202-shared-kms"
+          
+          echo "🔐 Deploying shared KMS key: $STACK_NAME (no more KMS headaches!)"
+          
+          aws cloudformation deploy \
+            --template-file cloudformation/shared-kms-key.yaml \
+            --stack-name "$STACK_NAME" \
+            --region ${{ env.AWS_REGION }} \
+            --parameter-overrides \
+              Environment="$ENVIRONMENT" \
+            --capabilities CAPABILITY_IAM \
+            --tags \
+              Environment="$ENVIRONMENT" \
+              Project="Troop202Website" \
+              ManagedBy="GitHubActions" \
+              Repository="${{ github.repository }}" \
+              CommitSha="${{ github.sha }}" \
+            --no-fail-on-empty-changeset
+
+          echo "stack-status=success" >> $GITHUB_OUTPUT
+          echo "✅ Shared KMS key deployed - all other stacks will use this!"
+
+  deploy-foundation:
+    name: Deploy Foundation Stack (S3, WAF)
+    runs-on: ubuntu-latest
+    needs: [validate, deploy-certificate, deploy-shared-kms]
+    if: needs.deploy-shared-kms.outputs.kms-deployed == 'success'
     environment: ${{ github.event.inputs.environment || 'prod' }}
     outputs:
       foundation-deployed: ${{ steps.deploy-foundation.outputs.stack-status }}
@@ -212,9 +270,6 @@ jobs:
             --region ${{ env.AWS_REGION }} \
             --parameter-overrides \
               Environment="$ENVIRONMENT" \
-              Project="Troop202Website" \
-              Repository="${{ github.repository }}" \
-              CommitSha="${{ github.sha }}" \
             --capabilities CAPABILITY_IAM \
             --tags \
               Environment="$ENVIRONMENT" \

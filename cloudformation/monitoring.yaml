@@ -20,13 +20,13 @@ Parameters:
 
 Resources:
   # CloudWatch Log Group for general monitoring
+  # Uses shared Troop202 KMS key via SSM because KMS keys are a pain in CloudFormation
   WebsiteLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub '/aws/cloudfront/${Environment}-troop202'
       RetentionInDays: 30
-      KmsKeyId:
-        Fn::ImportValue: !Sub '${FoundationStackName}-LogGroupKMSKeyArn'
+      KmsKeyId: !Sub '{{resolve:ssm:/troop202/shared/kms-key-arn}}'
       Tags:
         - Key: Environment
           Value: !Ref Environment
@@ -34,13 +34,13 @@ Resources:
           Value: 'CloudFormation'
 
   # CloudWatch Log Group for CloudFront access logs
+  # Uses shared Troop202 KMS key via SSM because KMS keys are a pain in CloudFormation
   CloudFrontLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub '/aws/cloudfront/access/${Environment}-troop202'
       RetentionInDays: 90
-      KmsKeyId:
-        Fn::ImportValue: !Sub '${FoundationStackName}-LogGroupKMSKeyArn'
+      KmsKeyId: !Sub '{{resolve:ssm:/troop202/shared/kms-key-arn}}'
       Tags:
         - Key: Name
           Value: !Sub '${Environment}-troop202-cloudfront-logs'
