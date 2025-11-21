@@ -7,11 +7,6 @@ Parameters:
     Default: 'troop202.site'
     Description: 'Domain name for the SSL certificate'
   
-  SubjectAlternativeNames:
-    Type: CommaDelimitedList
-    Default: '*.troop202.site'
-    Description: 'Additional domain names for the certificate (SAN)'
-  
   HostedZoneId:
     Type: String
     Description: 'Route 53 Hosted Zone ID for DNS validation'
@@ -28,13 +23,12 @@ Resources:
     Type: AWS::CertificateManager::Certificate
     Properties:
       DomainName: !Ref DomainName
-      SubjectAlternativeNames: !Ref SubjectAlternativeNames
-      ValidationMethod: DNS
+      SubjectAlternativeNames:
+        - !Sub '*.${DomainName}'
       DomainValidationOptions:
         - DomainName: !Ref DomainName
           HostedZoneId: !Ref HostedZoneId
-        - DomainName: !Select [0, !Ref SubjectAlternativeNames]
-          HostedZoneId: !Ref HostedZoneId
+      ValidationMethod: DNS
       Tags:
         - Key: Name
           Value: !Sub '${Environment}-troop202-ssl-cert'
