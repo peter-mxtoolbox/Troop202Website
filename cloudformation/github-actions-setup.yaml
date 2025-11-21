@@ -12,11 +12,6 @@ Parameters:
     Default: 'Troop202Website'
     Description: 'GitHub repository name'
   
-  GitHubBranch:
-    Type: String
-    Default: 'main'
-    Description: 'GitHub branch that can assume the role'
-  
   RoleName:
     Type: String
     Default: 'GitHubActions-Troop202-Role'
@@ -224,9 +219,7 @@ Resources:
                 'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com'
               StringLike:
                 'token.actions.githubusercontent.com:sub': 
-                  - !Sub 'repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/${GitHubBranch}'
-                  - !Sub 'repo:${GitHubOrg}/${GitHubRepo}:pull_request'
-                  - !Sub 'repo:${GitHubOrg}/${GitHubRepo}:ref:refs/heads/*'
+                  - !Sub 'repo:${GitHubOrg}/${GitHubRepo}:*'
       ManagedPolicyArns:
         - !Ref GitHubActionsPolicy
       MaxSessionDuration: 3600
