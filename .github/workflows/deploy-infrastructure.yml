@@ -248,8 +248,10 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+            echo "HOSTED_ZONE_ID=${{ github.event.inputs.hosted_zone_id }}" >> $GITHUB_ENV
           else
             echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+            echo "HOSTED_ZONE_ID=${{ secrets.HOSTED_ZONE_ID }}" >> $GITHUB_ENV
           fi
 
       - name: Deploy CloudFront Stack
@@ -269,6 +271,7 @@ jobs:
               DomainName=${{ env.DOMAIN_NAME }} \
               PriceClass="PriceClass_100" \
               FoundationStackName="$FOUNDATION_STACK" \
+              HostedZoneId="$HOSTED_ZONE_ID" \
             --capabilities CAPABILITY_IAM \
             --tags \
               Environment="$ENVIRONMENT" \
