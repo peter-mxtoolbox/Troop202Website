@@ -188,7 +188,6 @@ Resources:
           CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad  # Managed-CachingOptimized
           OriginRequestPolicyId: 88a5eaf4-2fd4-4709-b370-b4c650ea3fcf  # Managed-CORS-S3Origin
           ResponseHeadersPolicyId: !Ref ResponseHeadersPolicy
-          RealtimeLogConfigArn: !GetAtt CloudFrontRealTimeLogConfig.Arn
           Compress: true
         DefaultRootObject: !Ref IndexDocument
         Enabled: true
@@ -214,6 +213,10 @@ Resources:
             ResponseCode: 404
             ResponsePagePath: !Sub '/${ErrorDocument}'
             ErrorCachingMinTTL: 300
+        Logging:
+          Bucket: !GetAtt CloudFrontLogsBucket.DomainName
+          IncludeCookies: false
+          Prefix: 'cloudfront-logs/'
         WebACLId: !GetAtt WebACL.Arn
       Tags:
         - Key: Name
@@ -223,11 +226,11 @@ Resources:
         - Key: ManagedBy
           Value: 'CloudFormation'
 
-  # CloudWatch Log Group for Real-time CloudFront Logs
+  # CloudWatch Log Group for monitoring (simplified approach)
   CloudFrontLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub '/aws/cloudfront/realtime/${Environment}-troop202'
+      LogGroupName: !Sub '/aws/cloudfront/access/${Environment}-troop202'
       RetentionInDays: 90
       KmsKeyId: !GetAtt LogGroupKMSKey.Arn
       Tags:
@@ -238,52 +241,11 @@ Resources:
         - Key: ManagedBy
           Value: 'CloudFormation'
 
-  # Kinesis Data Stream for Real-time Logs
-  CloudFrontLogStream:
-    Type: AWS::Kinesis::Stream
-    Properties:
-      Name: !Sub '${Environment}-troop202-cloudfront-logs'
-      ShardCount: 1
-      RetentionPeriodHours: 24
-      StreamEncryption:
-        EncryptionType: KMS
-        KeyId: !Ref LogGroupKMSKey
-      Tags:
-        - Key: Name
-          Value: !Sub '${Environment}-troop202-cloudfront-logs'
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: ManagedBy
-          Value: 'CloudFormation'
-
-  # Kinesis Data Firehose to send logs to CloudWatch
-  CloudFrontLogDeliveryStream:
-    Type: AWS::KinesisFirehose::DeliveryStream
-    Properties:
-      DeliveryStreamName: !Sub '${Environment}-troop202-cloudfront-logs'
-      DeliveryStreamType: KinesisStreamAsSource
-      KinesisStreamSourceConfiguration:
-        KinesisStreamARN: !GetAtt CloudFrontLogStream.Arn
-        RoleARN: !GetAtt CloudFrontLoggingRole.Arn
-      ExtendedS3DestinationConfiguration:
-        BucketARN: !Sub 'arn:aws:s3:::${Environment}-troop202-logs-${AWS::AccountId}'
-        BufferingHints:
-          SizeInMBs: 64
-          IntervalInSeconds: 60
-        CompressionFormat: GZIP
-        Prefix: 'cloudfront-logs/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/'
-        ErrorOutputPrefix: 'error-logs/'
-        RoleARN: !GetAtt CloudFrontLoggingRole.Arn
-        CloudWatchLoggingOptions:
-          Enabled: true
-          LogGroupName: !Ref CloudFrontLogGroup
-          LogStreamName: 'firehose-delivery'
-
-  # Simple S3 bucket for Firehose delivery (using standard encryption)
+  # Simple S3 bucket for CloudFront standard logs (no ACL issues with modern bucket)
   CloudFrontLogsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub '${Environment}-troop202-logs-${AWS::AccountId}'
+      BucketName: !Sub '${Environment}-troop202-cloudfront-logs-${AWS::AccountId}'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -293,103 +255,17 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
       LifecycleConfiguration:
         Rules:
           - Id: DeleteOldLogs
             Status: Enabled
             ExpirationInDays: 90
-
-  # Real-time Log Configuration for CloudFront
-  CloudFrontRealTimeLogConfig:
-    Type: AWS::CloudFront::RealtimeLogConfig
-    Properties:
-      Name: !Sub '${Environment}-troop202-realtime-logs'
-      EndPoints:
-        - StreamType: Kinesis
-          KinesisStreamConfig:
-            RoleArn: !GetAtt CloudFrontLoggingRole.Arn
-            StreamArn: !GetAtt CloudFrontLogStream.Arn
-      Fields:
-        - timestamp
-        - c-ip
-        - sc-status
-        - cs-method
-        - cs-uri-stem
-        - cs-uri-query
-        - cs-referer
-        - cs-user-agent
-        - x-edge-location
-        - x-edge-request-id
-        - x-host-header
-        - sc-bytes
-        - time-taken
-        - x-forwarded-for
-        - ssl-protocol
-        - ssl-cipher
-        - x-edge-response-result-type
-        - cs-protocol-version
-        - time-to-first-byte
-        - x-edge-detailed-result-type
-        - sc-content-type
-        - sc-content-len
-      SamplingRate: 100
-
-  # IAM Role for CloudFront Real-time Logging
-  CloudFrontLoggingRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub '${Environment}-troop202-cloudfront-logging-role'
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - cloudfront.amazonaws.com
-                - firehose.amazonaws.com
-            Action: 'sts:AssumeRole'
-      Policies:
-        - PolicyName: CloudFrontLoggingPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - kinesis:PutRecord
-                  - kinesis:PutRecords
-                  - kinesis:DescribeStream
-                  - kinesis:GetRecords
-                  - kinesis:GetShardIterator
-                  - kinesis:ListStreams
-                Resource: !GetAtt CloudFrontLogStream.Arn
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource: !Sub '${CloudFrontLogGroup.Arn}*'
-              - Effect: Allow
-                Action:
-                  - s3:AbortMultipartUpload
-                  - s3:GetBucketLocation
-                  - s3:GetObject
-                  - s3:ListBucket
-                  - s3:ListBucketMultipartUploads
-                  - s3:PutObject
-                Resource:
-                  - !Sub '${CloudFrontLogsBucket}'
-                  - !Sub '${CloudFrontLogsBucket}/*'
-              - Effect: Allow
-                Action:
-                  - kms:Encrypt
-                  - kms:Decrypt
-                  - kms:ReEncrypt*
-                  - kms:GenerateDataKey*
-                  - kms:DescribeKey
-                Resource: !GetAtt LogGroupKMSKey.Arn
       Tags:
         - Key: Name
-          Value: !Sub '${Environment}-troop202-cloudfront-logging-role'
+          Value: !Sub '${Environment}-troop202-cloudfront-logs'
         - Key: Environment
           Value: !Ref Environment
         - Key: ManagedBy
