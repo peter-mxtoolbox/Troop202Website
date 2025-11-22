@@ -257,6 +257,8 @@ jobs:
             echo "ENVIRONMENT=prod" >> $GITHUB_ENV
           fi
 
+      # NOTE: Foundation stack now exports the shared KMS key ARN to keep 
+      # monitoring stack happy during transition. Next PR will clean this up.
       - name: Deploy Foundation Stack
         id: deploy-foundation
         run: |
