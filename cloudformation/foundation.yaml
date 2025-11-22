@@ -185,3 +185,12 @@ Outputs:
     Value: !GetAtt WebACL.Arn
     Export:
       Name: !Sub '${AWS::StackName}-WebACLArn'
+  
+  # TEMPORARY: Keep this export so monitoring stack doesn't break
+  # Points to shared KMS key via SSM. Will remove in next PR after monitoring is updated.
+  # CloudFormation is a pain about export dependencies!
+  LogGroupKMSKeyArn:
+    Description: 'KMS Key ARN for log encryption (now points to shared key)'
+    Value: '{{resolve:ssm:/troop202/shared/kms-key-arn}}'
+    Export:
+      Name: !Sub '${AWS::StackName}-LogGroupKMSKeyArn'
