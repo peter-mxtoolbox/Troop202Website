@@ -147,21 +147,7 @@ Resources:
           - Sid: KMSAccess
             Effect: Allow
             Action:
-              - 'kms:CreateKey'
-              - 'kms:CreateAlias'
-              - 'kms:DeleteAlias'
-              - 'kms:DescribeKey'
-              - 'kms:GetKeyPolicy'
-              - 'kms:PutKeyPolicy'
-              - 'kms:TagResource'
-              - 'kms:UntagResource'
-              - 'kms:ListAliases'
-              - 'kms:ListKeys'
-              - 'kms:Encrypt'
-              - 'kms:Decrypt'
-              - 'kms:ReEncrypt*'
-              - 'kms:GenerateDataKey*'
-              - 'kms:DescribeKey'
+              - 'kms:*'
             Resource: '*'
           
           - Sid: SSMParameterAccess
