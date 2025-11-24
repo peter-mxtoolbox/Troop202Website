@@ -172,7 +172,10 @@
         "kms:ListAliases",
         "kms:ListKeys",
         "kms:ScheduleKeyDeletion",
-        "kms:CancelKeyDeletion"
+        "kms:CancelKeyDeletion",
+        "kms:GetKeyRotationStatus",
+        "kms:EnableKeyRotation",
+        "kms:DisableKeyRotation"
       ],
       "Resource": "*"
     },

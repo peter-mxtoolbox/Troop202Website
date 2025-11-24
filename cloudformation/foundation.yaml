@@ -84,6 +84,41 @@ Resources:
         - Key: ManagedBy
           Value: 'CloudFormation'
 
+  # KMS Key for log encryption - NO TAGS because CloudFormation KMS tagging is a nightmare
+  # This key is used by CloudWatch log groups for encryption
+  LogGroupKMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Sub 'KMS Key for ${Environment} troop202 website logs'
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 'kms:*'
+            Resource: '*'
+          - Sid: Allow CloudWatch Logs
+            Effect: Allow
+            Principal:
+              Service: logs.amazonaws.com
+            Action:
+              - 'kms:Encrypt'
+              - 'kms:Decrypt'
+              - 'kms:ReEncrypt*'
+              - 'kms:GenerateDataKey*'
+              - 'kms:DescribeKey'
+            Resource: '*'
+      # NO TAGS - they cause CloudFormation permission nightmares!
+
+  # KMS Key Alias
+  LogGroupKMSKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub 'alias/${Environment}-troop202-logs'
+      TargetKeyId: !Ref LogGroupKMSKey
+
   # WAF Web ACL for security
   WebACL:
     Type: AWS::WAFv2::WebACL
@@ -186,11 +221,8 @@ Outputs:
     Export:
       Name: !Sub '${AWS::StackName}-WebACLArn'
   
-  # TEMPORARY: Keep this export so monitoring stack doesn't break
-  # Points to shared KMS key via SSM. Will remove in next PR after monitoring is updated.
-  # CloudFormation is a pain about export dependencies!
   LogGroupKMSKeyArn:
-    Description: 'KMS Key ARN for log encryption (now points to shared key)'
-    Value: '{{resolve:ssm:/troop202/shared/kms-key-arn}}'
+    Description: 'KMS Key ARN for log encryption'
+    Value: !GetAtt LogGroupKMSKey.Arn
     Export:
       Name: !Sub '${AWS::StackName}-LogGroupKMSKeyArn'
