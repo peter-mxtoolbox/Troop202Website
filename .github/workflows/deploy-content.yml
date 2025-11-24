@@ -28,6 +28,7 @@ on:
       - main
     paths:
       - 'website/**'
+      - '.github/workflows/deploy-content.yml'
 
 env:
   AWS_REGION: us-east-1
