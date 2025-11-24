@@ -70,29 +70,30 @@ jobs:
       - name: Get S3 bucket name and CloudFront distribution ID
         id: get-resources
         run: |
-          WEBSITE_STACK_NAME="troop202-website-${ENVIRONMENT}"
+          FOUNDATION_STACK_NAME="${ENVIRONMENT}-troop202-foundation"
+          CLOUDFRONT_STACK_NAME="${ENVIRONMENT}-troop202-cloudfront"
           
-          # Get S3 bucket name
+          # Get S3 bucket name from foundation stack
           BUCKET_NAME=$(aws cloudformation describe-stacks \
-            --stack-name "$WEBSITE_STACK_NAME" \
+            --stack-name "$FOUNDATION_STACK_NAME" \
             --region ${{ env.AWS_REGION }} \
             --query 'Stacks[0].Outputs[?OutputKey==`WebsiteBucketName`].OutputValue' \
             --output text)
           
           if [ -z "$BUCKET_NAME" ]; then
-            echo "❌ Could not find S3 bucket. Make sure infrastructure is deployed first."
+            echo "❌ Could not find S3 bucket. Make sure foundation stack is deployed first."
             exit 1
           fi
           
-          # Get CloudFront distribution ID
+          # Get CloudFront distribution ID from cloudfront stack
           DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
-            --stack-name "$WEBSITE_STACK_NAME" \
+            --stack-name "$CLOUDFRONT_STACK_NAME" \
             --region ${{ env.AWS_REGION }} \
             --query 'Stacks[0].Outputs[?OutputKey==`CloudFrontDistributionId`].OutputValue' \
             --output text)
           
           if [ -z "$DISTRIBUTION_ID" ]; then
-            echo "❌ Could not find CloudFront distribution. Make sure infrastructure is deployed first."
+            echo "❌ Could not find CloudFront distribution. Make sure cloudfront stack is deployed first."
             exit 1
           fi
           
