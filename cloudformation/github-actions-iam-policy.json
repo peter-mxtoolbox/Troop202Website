@@ -160,22 +160,7 @@
       "Sid": "KMSAccess",
       "Effect": "Allow",
       "Action": [
-        "kms:CreateKey",
-        "kms:CreateAlias",
-        "kms:DeleteAlias",
-        "kms:DescribeKey",
-        "kms:GetKeyPolicy",
-        "kms:PutKeyPolicy",
-        "kms:TagResource",
-        "kms:UntagResource",
-        "kms:ListResourceTags",
-        "kms:ListAliases",
-        "kms:ListKeys",
-        "kms:ScheduleKeyDeletion",
-        "kms:CancelKeyDeletion",
-        "kms:GetKeyRotationStatus",
-        "kms:EnableKeyRotation",
-        "kms:DisableKeyRotation"
+        "kms:*"
       ],
       "Resource": "*"
     },
