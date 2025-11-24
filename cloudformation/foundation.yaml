@@ -89,7 +89,7 @@ Resources:
   LogGroupKMSKey:
     Type: AWS::KMS::Key
     Properties:
-      Description: !Sub 'KMS Key for ${Environment} troop202 website logs'
+      Description: !Sub 'KMS Key for ${Environment} troop202 website logs (v2 - no tags)'
       KeyPolicy:
         Version: '2012-10-17'
         Statement:
