@@ -3,126 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Troop 202 - Boy Scouts of America">
+    <meta name="description" content="Troop 202 - Boy Scouts of America, Cedar Park, TX">
     <title>Troop 202 - Boy Scouts of America</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            text-align: center;
-            max-width: 600px;
-            margin: 2rem;
-        }
-        
-        .logo {
-            width: 120px;
-            height: 120px;
-            background: #1e3a8a;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 2rem;
-            font-size: 2rem;
-            color: white;
-            font-weight: bold;
-        }
-        
-        h1 {
-            color: #1e3a8a;
-            margin-bottom: 1rem;
-            font-size: 2.5rem;
-        }
-        
-        .subtitle {
-            color: #666;
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-        }
-        
-        .status {
-            background: #10b981;
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 25px;
-            display: inline-block;
-            margin: 1rem 0;
-            font-weight: bold;
-        }
-        
-        .info {
-            background: #f8fafc;
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin: 2rem 0;
-            border-left: 4px solid #1e3a8a;
-        }
-        
-        .footer {
-            margin-top: 2rem;
-            color: #888;
-            font-size: 0.9rem;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                margin: 1rem;
-                padding: 2rem;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-        }
-    </style>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <div class="logo">202</div>
-        <h1>Troop 202</h1>
-        <p class="subtitle">Boy Scouts of America</p>
-        
-        <div class="status">
-            🚀 Website Successfully Deployed!
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-patch-check-fill me-2"></i>
+                Troop 202
+            </a>
         </div>
-        
-        <div class="info">
-            <h3>Infrastructure Status</h3>
-            <p>✅ CloudFront CDN Active</p>
-            <p>✅ SSL Certificate Secured</p>
-            <p>✅ WAF Protection Enabled</p>
-            <p>✅ GitHub Actions Automated</p>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section text-center position-relative">
+        <div class="hero-image">
+            <img src="https://troopwebhost.blob.core.windows.net/troop202cedarpark/20171291639555346174133863791212.jpg" alt="Troop 202 in action" class="img-fluid">
         </div>
-        
-        <div class="footer">
-            <p>Deployed via AWS CloudFormation & GitHub Actions</p>
-            <p id="timestamp"></p>
+        <div class="hero-overlay">
         </div>
-    </div>
-    
-    <script>
-        // Display current timestamp
-        document.getElementById('timestamp').textContent = 
-            'Last updated: ' + new Date().toLocaleString();
-    </script>
+    </section>
+
+    <!-- Call to Action Buttons -->
+    <section class="py-5 text-center">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="d-grid gap-3 d-md-flex justify-content-md-center">
+                        <a href="https://www.troopwebhost.org/Troop202CedarPark/Index.htm" target="_blank" class="btn btn-light btn-custom">
+                            <i class="bi bi-house-fill me-2"></i>
+                            Visit Our Main Website at TroopWebhost
+                        </a>
+                        <a href="christmas-tree-recycling.html" class="btn btn-outline-success btn-outline-custom">
+                            <i class="bi bi-tree-fill me-2"></i>
+                            Christmas Tree Recycling
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-5" style="background: #fefce8;">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="card feature-card text-center p-4">
+                        <div class="card-body">
+                            <i class="bi bi-people-fill feature-icon"></i>
+                            <h5 class="card-title">Community Service</h5>
+                            <p class="card-text">We're proud to serve our Cedar Park community through various service projects and activities.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <a href="christmas-tree-recycling.html" class="text-decoration-none">
+                        <div class="card feature-card text-center p-4">
+                            <div class="card-body">
+                                <i class="bi bi-tree-fill feature-icon"></i>
+                                <h5 class="card-title">Christmas Tree Recycling</h5>
+                                <p class="card-text">Annual Christmas tree recycling program serving Cedar Park and Leander areas.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-lg-4 mb-4">
+                    <div class="card feature-card text-center p-4">
+                        <div class="card-body">
+                            <i class="bi bi-compass-fill feature-icon"></i>
+                            <h5 class="card-title">Character Development</h5>
+                            <p class="card-text">Building character, citizenship, and fitness in young people through Scouting programs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2024 Troop 202 - Boy Scouts of America</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">Cedar Park, Texas</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

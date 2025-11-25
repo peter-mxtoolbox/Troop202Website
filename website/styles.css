@@ -1,0 +1,172 @@
+.hero-section {
+    background: linear-gradient(135deg, #166534 0%, #15803d 100%);
+    color: white;
+    padding: 0;
+    min-height: 60vh;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 1;
+}
+
+.hero-overlay {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    min-height: 60vh;
+    background: rgba(0, 0, 0, 0);
+    padding: 100px 0;
+}
+
+.logo-circle {
+    width: 150px;
+    height: 150px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 3rem;
+    color: #16a34a;
+    font-weight: bold;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    padding: 15px;
+}
+
+.btn-custom {
+    background: #16a34a;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+.btn-custom:hover {
+    background: #15803d;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.btn-outline-custom {
+    border: 2px solid #059669;
+    color: #059669;
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-custom:hover {
+    background: #059669;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.feature-card {
+    border: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    height: 100%;
+    cursor: pointer;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* Make linked cards maintain text color */
+a.text-decoration-none .feature-card .card-title,
+a.text-decoration-none .feature-card .card-text {
+    color: inherit;
+}
+
+a.text-decoration-none:hover .feature-card .card-title {
+    color: #16a34a;
+}
+
+.feature-icon {
+    font-size: 3rem;
+    color: #16a34a;
+    margin-bottom: 1rem;
+}
+
+footer {
+    background: #166534;
+    color: white;
+}
+
+/* Christmas Tree Recycling Page Specific Styles */
+.tree-icon {
+    color: #059669;
+    font-size: 4rem;
+}
+
+.info-card {
+    border: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-radius: 15px;
+    margin-bottom: 2rem;
+}
+
+.pickup-date {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.service-area {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 10px;
+    border-left: 5px solid #059669;
+    margin: 1rem 0;
+}
+
+.important-note {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    padding: 1rem;
+    border-radius: 10px;
+    margin: 1rem 0;
+}
+
+.cost-highlight {
+    background: #dbeafe;
+    padding: 1.5rem;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #1e40af;
+    margin: 2rem 0;
+}
+
+/* Custom orange color for better readability */
+.text-custom-orange {
+    color: rgba(255, 135, 0, 1) !important;
+    margin-bottom: 1.5rem !important;
+}
