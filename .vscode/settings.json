@@ -1,0 +1,18 @@
+{
+    "liveServer.settings.host": "local.troop202.site",
+    "liveServer.settings.root": "/website",
+    "liveServer.settings.port": 443,
+    "liveServer.settings.CustomBrowser": "microsoft-edge",
+    "liveServer.settings.NoBrowser": false,
+    "liveServer.settings.ignoreFiles": [
+        ".vscode/**",
+        "**/*.scss",
+        "**/*.sass"
+    ],
+    "liveServer.settings.https": {
+        "enable": true,
+        "cert": "/Volumes/GitHub/Troop202Website/keys/troop202.site.pem",
+        "key": "/Volumes/GitHub/Troop202Website/keys/troop202.site.key",
+        "passphrase": ""
+    }
+}
