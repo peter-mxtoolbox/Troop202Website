@@ -1,0 +1,13 @@
+[project]
+name = "tree-recycling-routes"
+version = "0.1.0"
+description = "Automated route building for Christmas tree recycling"
+requires-python = ">=3.11"
+dependencies = [
+    "gspread>=6.1.2",
+    "google-auth>=2.35.0",
+    "pandas>=2.2.0",
+]
+
+[tool.uv]
+dev-dependencies = []
