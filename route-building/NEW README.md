@@ -55,23 +55,149 @@ uv sync
 pip install gspread google-auth pandas
 ```
 
-### Authentication Setup
+### Google Cloud Setup (First Time or New Keys)
 
-1. **Enable Google Sheets API**
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project or select existing
-   - Enable "Google Sheets API" and "Google Drive API"
+This section walks you through setting up Google Cloud APIs from scratch. You'll need this when:
+- Setting up the project for the first time
+- Getting a new API key issued
+- Onboarding a new volunteer to manage the system
 
-2. **Create Service Account**
-   - Navigate to "IAM & Admin" > "Service Accounts"
-   - Create service account
-   - Generate JSON key file
-   - Save as `credentials.json` (keep secure, add to .gitignore)
+#### Step 1: Create Google Cloud Project
 
-3. **Share Spreadsheet**
-   - Open your Google Sheet
-   - Share with the service account email (found in credentials.json)
-   - Give "Editor" permissions
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Sign in with your dedicated Gmail account (e.g., `troop202trees@gmail.com`)
+3. Click the project dropdown (top left, next to "Google Cloud")
+4. Click "New Project"
+   - **Project Name:** `Tree Recycling Routes` (or similar)
+   - **Organization:** Leave blank or select if you have one
+   - Click "Create"
+5. Wait for the project to be created (takes ~30 seconds)
+6. Select your new project from the dropdown
+
+#### Step 2: Enable Required APIs
+
+1. In the left sidebar, go to **"APIs & Services"** > **"Library"**
+2. Search for and enable each of these APIs:
+   
+   **For Google Sheets access:**
+   - Search: `Google Sheets API`
+   - Click on it, then click **"Enable"**
+   - Search: `Google Drive API`
+   - Click on it, then click **"Enable"**
+   
+   **For geocoding addresses:**
+   - Search: `Geocoding API`
+   - Click on it, then click **"Enable"**
+
+#### Step 3: Create Service Account (for Google Sheets)
+
+1. Go to **"APIs & Services"** > **"Credentials"**
+2. Click **"+ Create Credentials"** > **"Service Account"**
+3. Fill in the details:
+   - **Service account name:** `tree-recycling-service`
+   - **Service account ID:** (auto-filled, leave as-is)
+   - **Description:** `Service account for tree recycling route automation`
+4. Click **"Create and Continue"**
+5. **Grant this service account access to project:**
+   - Select role: **"Editor"**
+   - Click **"Continue"**, then **"Done"**
+6. Find your new service account in the list
+7. Click on the service account name
+8. Go to the **"Keys"** tab
+9. Click **"Add Key"** > **"Create new key"**
+10. Select **"JSON"** format
+11. Click **"Create"**
+12. A JSON file will download automatically
+13. Rename it to `credentials.json` and move it to your `route-building/` directory
+
+#### Step 4: Create API Key (for Google Maps Geocoding)
+
+1. Go to **"APIs & Services"** > **"Credentials"**
+2. Click **"+ Create Credentials"** > **"API Key"**
+3. A key will be created and shown in a popup - **copy this key!**
+4. (Optional but recommended) Click **"Restrict Key"** to secure it:
+   - **Name:** `Tree Recycling Geocoding Key`
+   - Under **"API restrictions"**:
+     - Select **"Restrict key"**
+     - Check only: ☑️ **Geocoding API**
+   - Click **"Save"**
+
+5. **Store the API key securely:**
+   
+   Option A - Environment Variable (Recommended):
+   ```bash
+   # Add to your ~/.zshrc or ~/.bash_profile
+   export GOOGLE_MAPS_API_KEY="your_api_key_here"
+   
+   # Then reload your shell
+   source ~/.zshrc
+   ```
+   
+   Option B - Config file (make sure it's in .gitignore):
+   ```bash
+   # Create a config file
+   echo "GOOGLE_MAPS_API_KEY=your_api_key_here" > route-building/.env
+   ```
+
+#### Step 5: Share Spreadsheets with Service Account
+
+1. Open your `credentials.json` file
+2. Find the `"client_email"` field (looks like: `tree-recycling-service@project-id.iam.gserviceaccount.com`)
+3. Copy this email address
+4. Open your Google Sheet (both 2025 and 2026)
+5. Click **"Share"** button (top right)
+6. Paste the service account email
+7. Give it **"Editor"** permissions
+8. Uncheck **"Notify people"** (it's a service account, not a person)
+9. Click **"Share"**
+
+#### Step 6: Verify Setup
+
+Run this test to verify everything works:
+
+```bash
+cd route-building
+uv run src/fetch_data.py
+```
+
+You should see data being fetched successfully!
+
+---
+
+### Billing & Free Tier Limits
+
+**Google Sheets API:** Completely free, no limits for our usage
+
+**Google Drive API:** Completely free, no limits for our usage
+
+**Geocoding API:**
+- **Free tier:** 40,000 requests per month (more than enough!)
+- **Cost after free tier:** $5 per 1,000 requests
+- **Our usage:** ~358 addresses per year = well under free tier
+- **With caching:** Addresses are cached forever, so you'll only geocode NEW addresses
+
+💡 **Tip:** With our permanent cache, you'll likely never geocode the same address twice across multiple years!
+
+---
+
+### Troubleshooting
+
+**"Credentials not found"**
+- Make sure `credentials.json` is in the `route-building/` directory
+- Check that the file is valid JSON (open it in a text editor)
+
+**"Spreadsheet not found"**
+- Make sure you shared the spreadsheet with the service account email
+- Check that the spreadsheet ID in `src/fetch_data.py` is correct
+
+**"API not enabled"**
+- Go back to Google Cloud Console > APIs & Services > Library
+- Make sure all three APIs are enabled (Sheets, Drive, Geocoding)
+
+**"Geocoding failed" or "API key invalid"**
+- Make sure you enabled the Geocoding API
+- Verify your API key is correct: `echo $GOOGLE_MAPS_API_KEY`
+- Check that API restrictions allow Geocoding API
 
 ### Basic Usage Example
 
@@ -203,12 +329,13 @@ This will:
 ## Security Notes
 
 ⚠️ **Important:**
-- Never commit `credentials.json` to git
-- Add to `.gitignore` immediately
-- Store credentials securely
-- Consider using environment variables for sensitive data
-- Use service account (not personal OAuth) for automation
+- **Never commit `credentials.json` to git** - It's already in `.gitignore`
+- **Never commit API keys to git** - Use environment variables or `.env` file (also in `.gitignore`)
+- Store credentials securely - Consider using a password manager for the service account JSON
+- The dedicated Gmail account should have a strong password and 2FA enabled
+- API keys should be restricted to only the APIs they need
+- Service accounts should have minimal permissions (Editor for sheets only)
 
 ---
 
-**Last Updated:** December 2, 2025
+**Last Updated:** December 3, 2025
