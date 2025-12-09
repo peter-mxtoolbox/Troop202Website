@@ -301,11 +301,11 @@ uv run src/fetch_data.py
 
 ## Next Steps
 
-- [ ] Set up Google Cloud project and service account
+- [x] Set up Google Cloud project and service account
 - [x] Install required Python packages (uv)
 - [x] Create `fetch_data.py` script to download spreadsheet
-- [ ] Update `SPREADSHEET_NAME` in `fetch_data.py` with actual name
-- [ ] Test data fetching with current spreadsheet
+- [x] Update `SPREADSHEET_NAME` in `fetch_data.py` with actual name
+- [x] Test data fetching with current spreadsheet
 - [ ] Design route assignment algorithm
 - [ ] Implement automated mapping
 
