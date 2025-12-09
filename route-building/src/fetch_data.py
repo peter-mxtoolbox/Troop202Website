@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+"""
+Fetch data from Google Sheets for tree recycling route building.
+
+This script connects to the Google Sheets API and downloads
+the current tree recycling requests data.
+"""
+
+import gspread
+from google.oauth2.service_account import Credentials
+import pandas as pd
+from pathlib import Path
+from typing import Optional
+import sys
+
+
+# Google Sheets API scopes
+SCOPES = [
+    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/drive'
+]
+
+# Configuration
+CREDENTIALS_FILE = 'credentials.json'
+
+# Spreadsheet IDs - Use ID from URL for reliability
+# Production (2026 season - January 2026 pickup)
+SPREADSHEET_ID_2026 = '16LJKmKXEXrI-rB8jySMdxGkiLL3rPlhUNbQRftTELBU'
+# Testing (2025 season - January 2025 pickup, historical data)
+SPREADSHEET_ID_2025 = '1KtLUxqvsdbQvS6_bmLbxziPWwbWnQCCH7U42294gteg'  # Add 2025 spreadsheet ID here
+
+# Active spreadsheet - change this to switch between prod/test
+ACTIVE_SPREADSHEET = SPREADSHEET_ID_2026  # Change to SPREADSHEET_ID_2025 for testing
+
+
+def get_credentials(credentials_path: str = CREDENTIALS_FILE) -> Credentials:
+    """
+    Load credentials from service account JSON file.
+    
+    Args:
+        credentials_path: Path to the credentials JSON file
+        
+    Returns:
+        Authorized credentials object
+        
+    Raises:
+        FileNotFoundError: If credentials file doesn't exist
+    """
+    creds_file = Path(credentials_path)
+    if not creds_file.exists():
+        raise FileNotFoundError(
+            f"Credentials file not found: {credentials_path}\n"
+            "Please follow the setup instructions in NEW README.md"
+        )
+    
+    creds = Credentials.from_service_account_file(
+        credentials_path,
+        scopes=SCOPES
+    )
+    return creds
+
+
+def fetch_sheet_data(
+    spreadsheet_id: str = ACTIVE_SPREADSHEET,
+    worksheet_index: int = 0,
+    credentials_path: str = CREDENTIALS_FILE
+) -> tuple[pd.DataFrame, str]:
+    """
+    Fetch data from Google Sheets and return as a pandas DataFrame.
+    
+    Args:
+        spreadsheet_id: ID of the Google Spreadsheet (defaults to ACTIVE_SPREADSHEET)
+        worksheet_index: Index of the worksheet (0 = first sheet)
+        credentials_path: Path to credentials file
+        
+    Returns:
+        Tuple of (DataFrame containing the sheet data, year string for file naming)
+    """
+    print(f"Authenticating with Google Sheets API...")
+    creds = get_credentials(credentials_path)
+    client = gspread.authorize(creds)
+    
+    # Determine which year/environment
+    if spreadsheet_id == SPREADSHEET_ID_2026:
+        env = "PRODUCTION (2026)"
+        year = "2026"
+    elif spreadsheet_id == SPREADSHEET_ID_2025:
+        env = "TESTING (2025)"
+        year = "2025"
+    else:
+        env = "CUSTOM"
+        year = "custom"
+    
+    print(f"Environment: {env}")
+    print(f"Opening spreadsheet: {spreadsheet_id}")
+    try:
+        spreadsheet = client.open_by_key(spreadsheet_id)
+    except gspread.exceptions.SpreadsheetNotFound:
+        print(f"Error: Spreadsheet with ID '{spreadsheet_id}' not found.")
+        print("Make sure:")
+        print("1. The spreadsheet ID is correct")
+        print("2. The spreadsheet is shared with your service account email")
+        print("   (found in credentials.json as 'client_email')")
+        sys.exit(1)
+    
+    # Get the worksheet
+    worksheet = spreadsheet.get_worksheet(worksheet_index)
+    print(f"Fetching data from worksheet: {worksheet.title}")
+    
+    # Get all records as list of dictionaries
+    records = worksheet.get_all_records()
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(records)
+    
+    print(f"Successfully fetched {len(df)} rows")
+    return df, year
+
+
+def save_local_copy(df: pd.DataFrame, year: str, output_path: Optional[str] = None) -> None:
+    """
+    Save a local copy of the data as CSV.
+    
+    Args:
+        df: DataFrame to save
+        year: Year string (e.g., '2025' or '2026') for file naming
+        output_path: Path where to save the CSV file (defaults to data/{year}-tree_requests.csv)
+    """
+    if output_path is None:
+        output_path = f'data/{year}-tree_requests.csv'
+    output_file = Path(output_path)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    df.to_csv(output_file, index=False)
+    print(f"Data saved to: {output_file}")
+
+
+def main():
+    """Main execution function."""
+    print("=" * 60)
+    print("Tree Recycling Data Fetcher")
+    print("=" * 60)
+    
+    try:
+        # Fetch the data
+        df, year = fetch_sheet_data()
+        
+        # Display summary
+        print("\nData Summary:")
+        print(f"Total records: {len(df)}")
+        print(f"Columns: {', '.join(df.columns)}")
+        
+        # Show first few rows
+        print("\nFirst 3 rows:")
+        print(df.head(3))
+        
+        # Save local copy
+        save_local_copy(df, year)
+        
+        print("\n✓ Data fetch completed successfully!")
+        
+    except Exception as e:
+        print(f"\n✗ Error: {e}")
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()
