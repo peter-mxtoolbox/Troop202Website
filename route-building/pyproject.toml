@@ -11,6 +11,7 @@ dependencies = [
     "geopy>=2.4.0",
     "matplotlib>=3.9.0",
     "googlemaps>=4.10.0",
+    "folium>=0.20.0",
 ]
 
 [tool.uv]
