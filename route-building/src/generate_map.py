@@ -81,15 +81,33 @@ def create_route_map(df: pd.DataFrame, output_path: str = 'data/2025-routes-map.
         route = row['optimized_route']
         route_info = route_groups[route]
         
+        # Escape HTML and JavaScript special characters to prevent errors
+        import html
+        def escape_for_js(text):
+            """Escape text for safe use in JavaScript strings."""
+            if pd.isna(text):
+                return ''
+            text = str(text)
+            # HTML escape first
+            text = html.escape(text)
+            # Then escape backticks and other JS-breaking characters
+            text = text.replace('`', '\\`').replace('${', '\\${')
+            return text
+        
+        name = escape_for_js(row['Name'])
+        address = escape_for_js(row['full_address'])
+        phone = escape_for_js(row.get('Phone Number', ''))
+        gate_code = escape_for_js(row.get('Gate Code (required if gated access)', ''))
+        
         # Create popup with address details
         popup_html = f"""
         <div style="font-family: Arial; font-size: 12px; min-width: 200px;">
             <b>Route {route}</b><br>
-            <b>{row['Name']}</b><br>
-            {row['full_address']}<br>
+            <b>{name}</b><br>
+            {address}<br>
             Trees: {int(row['Number of Trees'])}<br>
-            {f"Phone: {row['Phone Number']}<br>" if pd.notna(row.get('Phone Number')) else ""}
-            {f"Gate Code: {row['Gate Code (required if gated access)']}<br>" if pd.notna(row.get('Gate Code (required if gated access)')) else ""}
+            {f"Phone: {phone}<br>" if phone else ""}
+            {f"Gate Code: {gate_code}<br>" if gate_code else ""}
         </div>
         """
         
@@ -98,7 +116,7 @@ def create_route_map(df: pd.DataFrame, output_path: str = 'data/2025-routes-map.
             location=[row['latitude'], row['longitude']],
             radius=8,
             popup=folium.Popup(popup_html, max_width=300),
-            tooltip=f"{row['Name']} - Route {route}",
+            tooltip=f"{name} - Route {route}",
             color=route_info['color'],
             fillColor=route_info['color'],
             fillOpacity=0.7,
@@ -112,7 +130,7 @@ def create_route_map(df: pd.DataFrame, output_path: str = 'data/2025-routes-map.
     # Add layer control to toggle routes on/off
     folium.LayerControl(collapsed=False).add_to(route_map)
     
-    # Add a title
+    # Add a title using Folium's HTML element
     title_html = '''
     <div style="position: fixed; 
                 top: 10px; left: 50px; width: 400px; height: 60px; 
@@ -122,12 +140,15 @@ def create_route_map(df: pd.DataFrame, output_path: str = 'data/2025-routes-map.
         Click markers for details. Use layer control to toggle routes.
     </div>
     '''
-    route_map.get_root().html.add_child(folium.Element(title_html))
+    # Use the MacroElement API to add custom HTML
+    from branca.element import Element
+    route_map.get_root().add_child(Element(title_html))
     
     # Save the map
     route_map.save(output_path)
     print(f"\n✓ Map saved to: {output_path}")
-    print(f"  Open this file in a web browser to view the interactive map")
+    print(f"\n  To open the map, run:")
+    print(f"  open {output_path}")
     
     # Print route summary
     print("\n" + "="*60)
@@ -150,11 +171,19 @@ def main():
     test_mode = '--test' in sys.argv
     
     if test_mode:
-        input_path = 'data/2025-test-optimized-routes.csv'
+        # Try clustered first, fall back to optimized
+        if Path('data/2025-test-clustered-routes.csv').exists():
+            input_path = 'data/2025-test-clustered-routes.csv'
+        else:
+            input_path = 'data/2025-test-optimized-routes.csv'
         output_path = 'data/2025-test-routes-map.html'
         print("\n🧪 TEST MODE: Using test data")
     else:
-        input_path = 'data/2025-optimized-routes.csv'
+        # Try clustered first, fall back to optimized
+        if Path('data/2025-clustered-routes.csv').exists():
+            input_path = 'data/2025-clustered-routes.csv'
+        else:
+            input_path = 'data/2025-optimized-routes.csv'
         output_path = 'data/2025-routes-map.html'
     
     # Load routes
