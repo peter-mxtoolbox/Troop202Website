@@ -1,9 +1,0 @@
-Route A - Google Maps Directions
-============================================================
-
-Click or copy this URL to open in Google Maps:
-
-https://www.google.com/maps/dir/2111%2C%20Parksville%20Way%20%2C%20CEDAR%20PARK%2C%20TX/2616%2C%20Granite%20Hill%20Dr%20%2C%20Leander%2C%20TX/2010%2C%20E%20Gann%20Hill%20Drive%2C%20Cedar%20Park%2C%20TX/2433%2C%20Coralbush%20Dr%2C%20Leander%2C%20TX/3024%2C%20Desert%20Shade%20Bend%2C%20Leander%2C%20TX/2525%2C%20Coralbush%20Drive%2C%20Leander%2C%20TX/1907%2C%20Wheaton%20Trl%2C%20Cedar%20Park%2C%20TX/2404%2C%20Berkshire%20Way%2C%20Cedar%20Park%20%2C%20TX/1307%2C%20Ravensbrook%20Bend%2C%20Cedar%20Park%2C%20TX/2411%2C%20Yorkshire%20Ln%2C%20Cedar%20Park%2C%20TX/2412%2C%20sweetwater%20Lane%2C%20Cedar%20Park%2C%20TX/2003%2C%20Coachlamp%20Drive%2C%20Cedar%20Park%2C%20TX/1301%2C%20Ravensbrook%20Bend%2C%20Cedar%20Park%2C%20TX
-
-Pickups: 13
-Trees: 15

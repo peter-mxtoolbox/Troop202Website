@@ -260,32 +260,17 @@ def export_route(route_name: str, csv_path: str, output_dir: str = 'data/route-e
     print(f"Trees: {int(route_df['Number of Trees'].sum())}")
     
     # Generate Google Maps URL
-    print("\nGenerating Google Maps URL...")
+    print("\nGenerating Google Maps URL and PDF...")
     maps_url = generate_google_maps_url(route_df, route_name)
     
-    # Save URL to text file
-    url_file = output_path / f"Route-{route_name}-GoogleMaps.txt"
-    with open(url_file, 'w') as f:
-        f.write(f"Route {route_name} - Google Maps Directions\n")
-        f.write(f"{'='*60}\n\n")
-        f.write(f"Click or copy this URL to open in Google Maps:\n\n")
-        f.write(maps_url)
-        f.write(f"\n\n")
-        f.write(f"Pickups: {len(route_df)}\n")
-        f.write(f"Trees: {int(route_df['Number of Trees'].sum())}\n")
-    
-    print(f"  ✓ Maps URL saved: {url_file}")
-    
     # Generate PDF
-    print("\nGenerating PDF tracking sheet...")
     pdf_file = output_path / f"Route-{route_name}-PickupSheet.pdf"
     create_route_pdf(route_df, route_name, str(pdf_file), maps_url)
     
     print(f"\n{'='*60}")
     print(f"✓ Route {route_name} exported successfully!")
     print(f"{'='*60}")
-    print(f"\nFiles created in: {output_dir}/")
-    print(f"  - Route-{route_name}-GoogleMaps.txt")
+    print(f"\nFile created in: {output_dir}/")
     print(f"  - Route-{route_name}-PickupSheet.pdf")
     print(f"\nTo open the PDF:")
     print(f"  open {pdf_file}")
