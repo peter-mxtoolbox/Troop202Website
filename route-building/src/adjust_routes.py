@@ -8,6 +8,7 @@ Provides menu-driven interface for:
 """
 
 import sys
+import string
 from pathlib import Path
 import pandas as pd
 from typing import Optional
@@ -215,6 +216,92 @@ def merge_routes(df: pd.DataFrame, csv_path: str):
     return df
 
 
+def split_route(df: pd.DataFrame, csv_path: str):
+    """Move selected customers from a route into a brand new route."""
+    print("\n" + "="*60)
+    print("SPLIT A ROUTE / START NEW ROUTE")
+    print("="*60)
+
+    routes = sorted(df['optimized_route'].unique())
+    print(f"\nAvailable routes: {', '.join(routes)}")
+
+    route_to_split = input("\nEnter the route you want to split: ").strip().upper()
+    if route_to_split not in routes:
+        print(f"❌ Route {route_to_split} not found")
+        return df
+
+    route_df = df[df['optimized_route'] == route_to_split]
+    if len(route_df) == 0:
+        print(f"❌ Route {route_to_split} has no customers")
+        return df
+
+    print(f"\nRoute {route_to_split} contains {len(route_df)} pickups:")
+    for idx, row in route_df.iterrows():
+        trees = int(row['Number of Trees'])
+        print(f"  [{idx}] {row['Name']} - {row['full_address']} ({trees} trees)")
+
+    selection = input("\nEnter the numbers in brackets to move (comma-separated): ").strip()
+    if not selection:
+        print("Cancelled.")
+        return df
+
+    try:
+        selected_indices = {int(idx.strip()) for idx in selection.split(',') if idx.strip()}
+    except ValueError:
+        print("❌ Invalid selection format. Use comma-separated numbers, e.g. 12,15,20")
+        return df
+
+    route_indices = set(route_df.index.tolist())
+    if not selected_indices.issubset(route_indices):
+        print("❌ One or more selected numbers are not part of that route")
+        return df
+
+    selected_df = df.loc[list(selected_indices)]
+    selected_trees = int(selected_df['Number of Trees'].sum())
+
+    # Suggest a new route letter that is not used yet
+    suggestion = next((letter for letter in string.ascii_uppercase if letter not in routes), None)
+    prompt = "Enter new route letter/name"
+    if suggestion:
+        prompt += f" (suggested: {suggestion})"
+    prompt += ": "
+
+    new_route = input(f"\n{prompt}").strip().upper()
+    if not new_route:
+        if suggestion:
+            new_route = suggestion
+            print(f"Using suggested route {suggestion}")
+        else:
+            print("❌ No route entered")
+            return df
+
+    if new_route in routes:
+        confirm_existing = input(f"Route {new_route} already exists. Continue anyway? (y/n): ").strip().lower()
+        if confirm_existing != 'y':
+            print("Cancelled.")
+            return df
+
+    print("\nThe following customers will move to the new route:")
+    for _, row in selected_df.iterrows():
+        trees = int(row['Number of Trees'])
+        print(f"  {row['Name']} - {row['full_address']} ({trees} trees)")
+    print(f"Total trees moving: {selected_trees}")
+
+    confirm = input(f"\nCreate Route {new_route} by moving these customers from Route {route_to_split}? (y/n): ").strip().lower()
+    if confirm != 'y':
+        print("Cancelled.")
+        return df
+
+    df.loc[list(selected_indices), 'optimized_route'] = new_route
+    df.to_csv(csv_path, index=False)
+
+    print(f"\n✓ Created Route {new_route} with {len(selected_df)} pickups ({selected_trees} trees)")
+    print(f"✓ Updated Route {route_to_split} now has {len(route_df) - len(selected_df)} pickups")
+    print(f"✓ Changes saved to {csv_path}")
+
+    return df
+
+
 def regenerate_map(test_mode: bool = False):
     """Regenerate the map by calling generate_map.py."""
     import subprocess
@@ -245,10 +332,11 @@ def show_menu():
     print("ROUTE ADJUSTMENT TOOL")
     print("="*60)
     print("\n1. Move a customer to a different route")
-    print("2. Merge two routes into one")
-    print("3. Show problem routes (>24 or <10 trees)")
-    print("4. Regenerate map")
-    print("5. Quit")
+    print("2. Split an existing route into a new route")
+    print("3. Merge two routes into one")
+    print("4. Show problem routes (>24 or <10 trees)")
+    print("5. Regenerate map")
+    print("6. Quit")
     print()
 
 
@@ -271,21 +359,23 @@ def main():
         show_menu()
         
         try:
-            choice = input("Enter your choice (1-5): ").strip()
-            
+            choice = input("Enter your choice (1-6): ").strip()
+
             if choice == '1':
                 df = move_customer(df, csv_path)
             elif choice == '2':
-                df = merge_routes(df, csv_path)
+                df = split_route(df, csv_path)
             elif choice == '3':
-                show_problem_routes(df)
+                df = merge_routes(df, csv_path)
             elif choice == '4':
-                regenerate_map(test_mode)
+                show_problem_routes(df)
             elif choice == '5':
+                regenerate_map(test_mode)
+            elif choice == '6':
                 print("\nGoodbye!")
                 break
             else:
-                print("\n❌ Invalid choice. Please enter 1-5.")
+                print("\n❌ Invalid choice. Please enter 1-6.")
         
         except KeyboardInterrupt:
             print("\n\nGoodbye!")
