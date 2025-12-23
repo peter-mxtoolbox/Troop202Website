@@ -1,16 +1,63 @@
-# Route Building Guide
+# Christmas Tree Pickup - Route Building
 
-A comprehensive guide for managing Christmas tree recycling pickup routes.
+Automated route building using geographic clustering.
+
+## Quick Start
+
+### 1. Fetch Latest Data
+```bash
+uv run python src/fetch_data.py
+```
+
+### 2. Geocode Addresses
+```bash
+uv run python src/geocode_google.py
+```
+
+### 3. Generate Routes
+```bash
+uv run python src/cluster_routes.py
+```
+
+### 4. Visualize Routes
+```bash
+uv run python src/generate_map.py
+open data/2025-routes-map.html
+```
+
+## How It Works
+
+1. **Data Collection**: Fetches form responses from Google Sheets
+2. **Geocoding**: Converts addresses to coordinates using Google Maps API (with caching)
+3. **Clustering**: Groups nearby addresses into routes using K-means
+4. **Auto-sizing**: Automatically finds optimal number of routes based on trailer capacity
+5. **Visualization**: Generates interactive map with color-coded routes
+
+## Configuration
+
+Trailer capacities (in `src/cluster_routes.py`):
+- Large (16-foot) trailers: 25 trees per route
+- Small (12-foot) trailers: 18 trees per route
+- Default capacity limit: 22 trees per route
+
+## Output Files
+
+- `data/2025-clustered-routes.csv` - Route assignments
+- `data/2025-routes-map.html` - Interactive map
+- `data/2025-geocoded-full.csv` - Geocoded addresses
+
+See [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) for detailed project information.
 
 ---
+
+# Historical Documentation
 
 ## Table of Contents
 
 1. [Old Manual Instructions](#old-manual-instructions)
 2. [Old Docker Instructions](#old-docker-instructions)
 3. [GitHub Repository Information](#github-repository-information)
-4. [Plans for This Year](#plans-for-this-year)
-5. [Additional Notes](#additional-notes)
+4. [Additional Notes](#additional-notes)
 
 ---
 
@@ -210,38 +257,25 @@ You should now have CSV, HTML, PDF, and XLSX versions of each route.
 
 ---
 
-## Plans for This Year
+## What Changed From Previous Years
 
-### New Automated System
+### Old System (Manual)
+- Copy data from Google Sheets to local spreadsheet
+- Manually assign routes by eyeballing addresses
+- Copy/paste into multiple tools
+- Generate maps manually
 
-This year, we are transitioning to a new automated system that will streamline the route building process. The goals are:
+### New System (Automated) ✓
+- Automatically fetch data from Google Sheets
+- Geographic clustering assigns routes
+- One-command map generation
+- Geocoding cache eliminates repeated API calls
 
-1. **Reduce Manual Work**
-   - Minimize manual copy-paste operations
-   - Automate route assignment where possible
-   - Streamline the map creation process
-
-2. **Integration with Modern Tools**
-   - Leverage cloud-based automation
-   - Improve data synchronization between systems
-   - Create real-time updates as new submissions arrive
-
-3. **Improved Workflow**
-   - Eliminate the need for multiple spreadsheet copies
-   - Automate the CSV export and map regeneration cycle
-   - Provide better visibility into route assignments
-
-4. **Enhanced Error Handling**
-   - Automated address validation
-   - Better error reporting and correction suggestions
-   - Reduce manual address format tweaking
-
-### Implementation Timeline
-
-- **Planning Phase:** Review old system and identify pain points ✓
-- **Development Phase:** Build automated route assignment system (In Progress)
-- **Testing Phase:** Test with sample data from previous years
-- **Deployment Phase:** Deploy before next collection season
+### Benefits
+- **Speed**: Routes created in 1-2 seconds (vs hours of manual work)
+- **Consistency**: Same addresses always geocoded identically  
+- **Scalability**: Automatically adjusts number of routes based on volume
+- **Visualization**: Interactive HTML maps with route toggles
 - **Training Phase:** Train volunteers on new system
 
 ### Technical Approach

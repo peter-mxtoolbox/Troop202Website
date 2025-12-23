@@ -216,16 +216,14 @@ def main():
     df = pd.read_csv(csv_path)
     print(f"Loaded {len(df)} requests")
     
-    # Geocode all addresses (or use limit=20 for testing)
+    # Geocode all addresses
     print("\nStarting geocoding...")
     print("Note: First run will make API calls, subsequent runs use cache!")
     
-    # Uncomment one of these:
-    # df_geocoded = geocode_dataframe(df, limit=20)  # Test with 20
-    df_geocoded = geocode_dataframe(df)  # Geocode all
+    df_geocoded = geocode_dataframe(df)
+    output_path = 'data/2025-geocoded-full.csv'
     
     # Save results
-    output_path = 'data/2025-geocoded-full.csv'
     df_geocoded.to_csv(output_path, index=False)
     print(f"\n✓ Geocoded data saved to: {output_path}")
     
