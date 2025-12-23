@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Troop 202 Route Planning Tools">
+    <title>Route Planning Tools - Troop 202</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-patch-check-fill me-2"></i>
+                Troop 202
+            </a>
+            <span class="badge text-bg-warning ms-auto">Beta</span>
+        </div>
+    </nav>
+
+    <header class="route-tools-hero text-white d-flex align-items-center">
+        <div class="container text-center">
+            <h1 class="display-5 fw-bold mb-3">Route Planning Control Center</h1>
+            <p class="lead mb-4">
+                Manage data refreshes, geocoding, map generation, and manual route adjustments for the 2025/2026 pickups.
+            </p>
+            <div class="d-flex flex-column flex-md-row justify-content-center gap-3">
+                <div>
+                    <i class="bi bi-cloud-arrow-down me-2"></i>
+                    Backend powered by AWS Lambda &amp; API Gateway
+                </div>
+                <div>
+                    <i class="bi bi-shield-check me-2"></i>
+                    Google Sheets + Geocode cache synced via S3
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="py-5">
+        <div class="container">
+            <div class="alert alert-warning small" role="alert">
+                <strong>Heads up:</strong> This page is wired for the future Lambda API. Until it is deployed, the interface shows sample data.
+                Set <code>window.ROUTE_TOOLS_API_BASE</code> before this script loads to point at the deployed API Gateway URL
+                (for example <code>https://api.troop202.site/route-tools</code>).
+            </div>
+
+            <ul class="nav nav-tabs route-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-year-tab="2026" type="button" role="tab">2026 (Live)</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-year-tab="2025" type="button" role="tab">2025 (Test)</button>
+                </li>
+            </ul>
+
+            <div class="year-panels">
+                <section class="year-panel active" data-year-panel="2026">
+                    <div class="panel-header">
+                        <div>
+                            <h2 class="h4 mb-1">2026 Operations</h2>
+                            <p class="text-muted mb-0">Live dataset for the upcoming pickup season.</p>
+                        </div>
+                        <div class="panel-meta">
+                            <span class="text-muted small" data-last-update>Last refresh pending</span>
+                        </div>
+                    </div>
+                    <div class="alerts" data-alerts></div>
+                    <div class="loading-overlay d-none" data-loading>
+                        <div class="spinner-border text-white" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="row g-3 summary-cards" data-summary>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="summary-card">
+                                <p class="label">Pickups</p>
+                                <h3 data-field="total_pickups">--</h3>
+                                <small>Rows from Google Sheet</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="summary-card">
+                                <p class="label">Trees</p>
+                                <h3 data-field="total_trees">--</h3>
+                                <small>Total declared trees</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="summary-card">
+                                <p class="label">Geocoded</p>
+                                <h3 data-field="geocoded">--</h3>
+                                <small data-field="missing_geocode">-- missing</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="summary-card">
+                                <p class="label">Routes</p>
+                                <h3 data-field="route_count">--</h3>
+                                <small>Clustered and ready</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card map-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-map"></i> Latest Map</span>
+                            <button class="btn btn-sm btn-outline-secondary" data-action="open-map" data-year="2026">
+                                Open Fullscreen
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="ratio ratio-16x9 rounded overflow-hidden">
+                                <iframe data-map-frame src="" title="Route map" loading="lazy"></iframe>
+                            </div>
+                            <div class="map-placeholder" data-map-placeholder>
+                                No map detected. Run <strong>Refresh Data</strong> to generate a baseline map.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card action-card">
+                        <div class="card-body">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-md-3 col-sm-6 d-grid">
+                                    <button class="btn btn-success" data-action="refresh" data-year="2026">
+                                        <i class="bi bi-arrow-repeat me-2"></i>Refresh Data Pipeline
+                                    </button>
+                                </div>
+                                <div class="col-md-3 col-sm-6 d-grid">
+                                    <button class="btn btn-outline-primary" data-action="fetch" data-year="2026">
+                                        <i class="bi bi-file-arrow-down me-2"></i>Fetch from Sheet
+                                    </button>
+                                </div>
+                                <div class="col-md-3 col-sm-6 d-grid">
+                                    <button class="btn btn-outline-info" data-action="geocode" data-year="2026">
+                                        <i class="bi bi-geo-alt me-2"></i>Geocode Missing
+                                    </button>
+                                </div>
+                                <div class="col-md-3 col-sm-6 d-grid">
+                                    <button class="btn btn-outline-secondary" data-action="map" data-year="2026">
+                                        <i class="bi bi-map-fill me-2"></i>Regenerate Map
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card data-card">
+                        <div class="card-header d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+                            <div>
+                                <h3 class="h5 mb-0">Tree Requests</h3>
+                                <small class="text-muted" data-row-count>-- rows</small>
+                            </div>
+                            <div class="input-group input-group-sm data-search">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" placeholder="Filter by name, address, or route" data-search="2026">
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table align-middle table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th scope="col"><input type="checkbox" data-select-all="2026"></th>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Address</th>
+                                        <th scope="col">Trees</th>
+                                        <th scope="col">Route</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Updated</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-table-body="2026"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card adjust-card">
+                        <div class="card-body">
+                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                                <div>
+                                    <h4 class="h6 mb-1">Adjust Routes</h4>
+                                    <p class="small mb-0" data-selection-count>0 stops selected.</p>
+                                </div>
+                                <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
+                                    <input type="text" class="form-control form-control-sm" maxlength="2" placeholder="New route (e.g. AB)" data-new-route="2026">
+                                    <button class="btn btn-warning btn-sm" data-action="adjust" data-year="2026" disabled>
+                                        <i class="bi bi-arrows-move me-2"></i>Apply Move
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="year-panel" data-year-panel="2025">
+                    <div class="panel-header">
+                        <div>
+                            <h2 class="h4 mb-1">2025 Operations</h2>
+                            <p class="text-muted mb-0">Testing dataset used for verification.</p>
+                        </div>
+                        <div class="panel-meta">
+                            <span class="text-muted small" data-last-update>Last refresh pending</span>
+                        </div>
+                    </div>
+                    <div class="alerts" data-alerts></div>
+                    <div class="loading-overlay d-none" data-loading>
+                        <div class="spinner-border text-white" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="row g-3 summary-cards" data-summary>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="summary-card">
+                                <p class="label">Pickups</p>
+                                <h3 data-field="total_pickups">--</h3>
+                                <small>Rows from Google Sheet</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="summary-card">
+                                <p class="label">Trees</p>
+                                <h3 data-field="total_trees">--</h3>
+                                <small>Total declared trees</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="summary-card">
+                                <p class="label">Geocoded</p>
+                                <h3 data-field="geocoded">--</h3>
+                                <small data-field="missing_geocode">-- missing</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="summary-card">
+                                <p class="label">Routes</p>
+                                <h3 data-field="route_count">--</h3>
+                                <small>Clustered and ready</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card map-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-map"></i> Latest Map</span>
+                            <button class="btn btn-sm btn-outline-secondary" data-action="open-map" data-year="2025">
+                                Open Fullscreen
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="ratio ratio-16x9 rounded overflow-hidden">
+                                <iframe data-map-frame src="" title="Route map" loading="lazy"></iframe>
+                            </div>
+                            <div class="map-placeholder" data-map-placeholder>
+                                No map detected. Run <strong>Refresh Data</strong> to generate a baseline map.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card action-card">
+                        <div class="card-body">
+                            <div class="row g-3 align-items-center">
+                                <div class="col-md-3 col-sm-6 d-grid">
+                                    <button class="btn btn-success" data-action="refresh" data-year="2025">
+                                        <i class="bi bi-arrow-repeat me-2"></i>Refresh Data Pipeline
+                                    </button>
+                                </div>
+                                <div class="col-md-3 col-sm-6 d-grid">
+                                    <button class="btn btn-outline-primary" data-action="fetch" data-year="2025">
+                                        <i class="bi bi-file-arrow-down me-2"></i>Fetch from Sheet
+                                    </button>
+                                </div>
+                                <div class="col-md-3 col-sm-6 d-grid">
+                                    <button class="btn btn-outline-info" data-action="geocode" data-year="2025">
+                                        <i class="bi bi-geo-alt me-2"></i>Geocode Missing
+                                    </button>
+                                </div>
+                                <div class="col-md-3 col-sm-6 d-grid">
+                                    <button class="btn btn-outline-secondary" data-action="map" data-year="2025">
+                                        <i class="bi bi-map-fill me-2"></i>Regenerate Map
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card data-card">
+                        <div class="card-header d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+                            <div>
+                                <h3 class="h5 mb-0">Tree Requests</h3>
+                                <small class="text-muted" data-row-count>-- rows</small>
+                            </div>
+                            <div class="input-group input-group-sm data-search">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" placeholder="Filter by name, address, or route" data-search="2025">
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table align-middle table-hover table-sm">
+                                <thead>
+                                    <tr>
+                                        <th scope="col"><input type="checkbox" data-select-all="2025"></th>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Address</th>
+                                        <th scope="col">Trees</th>
+                                        <th scope="col">Route</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Updated</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-table-body="2025"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card adjust-card">
+                        <div class="card-body">
+                            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                                <div>
+                                    <h4 class="h6 mb-1">Adjust Routes</h4>
+                                    <p class="small mb-0" data-selection-count>0 stops selected.</p>
+                                </div>
+                                <div class="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
+                                    <input type="text" class="form-control form-control-sm" maxlength="2" placeholder="New route (e.g. AB)" data-new-route="2025">
+                                    <button class="btn btn-warning btn-sm" data-action="adjust" data-year="2025" disabled>
+                                        <i class="bi bi-arrows-move me-2"></i>Apply Move
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2024 Troop 202 - Internal Route Planning Tools</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">Cedar Park, Texas</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        (function() {
+            const API_BASE = window.ROUTE_TOOLS_API_BASE || '';
+            const SAMPLE_DATA = window.ROUTE_TOOLS_SAMPLE_DATA || {
+                2025: {
+                    year: 2025,
+                    summary: {
+                        total_pickups: 358,
+                        total_trees: 368,
+                        geocoded: 352,
+                        missing_geocode: 6,
+                        route_count: 28,
+                        last_refresh_at: '2024-12-31T21:00:00Z',
+                        map_url: 'https://example.com/maps/2025/latest.html',
+                        sheet_url: 'https://docs.google.com/spreadsheets/d/TEST',
+                        operations: [
+                            { action: 'cluster', ran_at: '2024-12-31T20:42:00Z', notes: 'Created 28 routes' },
+                            { action: 'geocode', ran_at: '2024-12-31T20:38:00Z', notes: 'Geocoded 12 missing rows' },
+                            { action: 'fetch', ran_at: '2024-12-31T20:35:00Z', notes: 'Synced 358 rows from sheet' }
+                        ]
+                    },
+                    trees: [
+                        { id: 'REQ-001', name: 'Rivera Family', full_address: '1508 Whispering Oaks, Cedar Park, TX', trees: 2, optimized_route: 'A', geocoded: true, last_updated: '2024-12-31T20:40:00Z', notes: 'Leave by garage' },
+                        { id: 'REQ-002', name: 'Lexi Chen', full_address: '2310 Cypress Creek Rd, Cedar Park, TX', trees: 1, optimized_route: 'B', geocoded: true, last_updated: '2024-12-31T20:41:00Z', notes: '' },
+                        { id: 'REQ-003', name: 'Morgan Patel', full_address: '702 Harvest Run, Cedar Park, TX', trees: 3, optimized_route: 'F', geocoded: false, last_updated: '2024-12-31T20:41:00Z', notes: 'Needs manual check' },
+                        { id: 'REQ-004', name: 'Garcia Household', full_address: '1104 Lone Star Dr, Leander, TX', trees: 1, optimized_route: 'R', geocoded: true, last_updated: '2024-12-31T20:37:00Z', notes: '' }
+                    ]
+                },
+                2026: {
+                    year: 2026,
+                    summary: {
+                        total_pickups: 0,
+                        total_trees: 0,
+                        geocoded: 0,
+                        missing_geocode: 0,
+                        route_count: 0,
+                        last_refresh_at: null,
+                        map_url: '',
+                        sheet_url: 'https://docs.google.com/spreadsheets/d/LIVE',
+                        operations: []
+                    },
+                    trees: []
+                }
+            };
+
+            const panels = document.querySelectorAll('[data-year-panel]');
+            const tabs = document.querySelectorAll('[data-year-tab]');
+            const state = {};
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const year = tab.getAttribute('data-year-tab');
+                    tabs.forEach(t => t.classList.remove('active'));
+                    panels.forEach(panel => panel.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.querySelector(`[data-year-panel="${year}"]`).classList.add('active');
+                    if (!state[year]) {
+                        loadYear(year);
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-action]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const action = button.getAttribute('data-action');
+                    const year = button.getAttribute('data-year');
+                    if (!year) {
+                        if (action === 'open-map') {
+                            const panel = button.closest('[data-year-panel]');
+                            const iframe = panel.querySelector('[data-map-frame]');
+                            if (iframe && iframe.dataset.mapUrl) {
+                                window.open(iframe.dataset.mapUrl, '_blank');
+                            }
+                        }
+                        return;
+                    }
+
+                    if (action === 'open-map') {
+                        const panel = document.querySelector(`[data-year-panel="${year}"]`);
+                        const iframe = panel.querySelector('[data-map-frame]');
+                        if (iframe && iframe.dataset.mapUrl) {
+                            window.open(iframe.dataset.mapUrl, '_blank');
+                        } else {
+                            pushAlert(year, 'info', 'No map available yet. Run Refresh Data to generate one.');
+                        }
+                        return;
+                    }
+
+                    if (action === 'adjust') {
+                        handleAdjust(year);
+                        return;
+                    }
+
+                    handleAction(year, action);
+                });
+            });
+
+            document.querySelectorAll('[data-search]').forEach(input => {
+                input.addEventListener('input', () => {
+                    const year = input.getAttribute('data-search');
+                    renderTable(year);
+                });
+            });
+
+            document.querySelectorAll('[data-select-all]').forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    const year = checkbox.getAttribute('data-select-all');
+                    const panel = document.querySelector(`[data-year-panel="${year}"]`);
+                    panel.querySelectorAll('[data-row-select]').forEach(rowCheckbox => {
+                        rowCheckbox.checked = checkbox.checked;
+                    });
+                    updateSelection(year);
+                });
+            });
+
+            panels.forEach(panel => {
+                panel.addEventListener('change', event => {
+                    if (event.target.matches('[data-row-select]')) {
+                        const year = panel.getAttribute('data-year-panel');
+                        updateSelection(year);
+                    }
+                });
+            });
+
+            function loadYear(year) {
+                const panel = document.querySelector(`[data-year-panel="${year}"]`);
+                setLoading(panel, true);
+                fetchYearData(year)
+                    .then(data => {
+                        state[year] = {
+                            raw: data,
+                            filtered: data.trees || []
+                        };
+                        panel.querySelector('[data-last-update]').textContent = data.summary && data.summary.last_refresh_at ?
+                            `Last refresh: ${formatDate(data.summary.last_refresh_at)}` : 'No refresh recorded yet';
+                        renderSummary(panel, data.summary || {});
+                        renderMap(panel, data.summary || {});
+                        renderTable(year);
+                        pushAlert(year, 'success', `Loaded ${data.trees ? data.trees.length : 0} rows for ${year}.`);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        pushAlert(year, 'danger', err.message || 'Unable to load data');
+                        const fallback = SAMPLE_DATA[year];
+                        if (fallback) {
+                            state[year] = { raw: fallback, filtered: fallback.trees };
+                            renderSummary(panel, fallback.summary || {});
+                            renderMap(panel, fallback.summary || {});
+                            renderTable(year);
+                        }
+                    })
+                    .finally(() => setLoading(panel, false));
+            }
+
+            function fetchYearData(year) {
+                if (!API_BASE) {
+                    return Promise.reject(new Error('API not configured. Using sample data.'));
+                }
+                const url = `${API_BASE}/years/${year}`;
+                return fetch(url).then(resp => {
+                    if (!resp.ok) {
+                        throw new Error(`API error (${resp.status})`);
+                    }
+                    return resp.json();
+                });
+            }
+
+            function handleAction(year, action) {
+                const panel = document.querySelector(`[data-year-panel="${year}"]`);
+                setLoading(panel, true);
+                postAction(year, action)
+                    .then(result => {
+                        const message = result && result.message ? result.message : 'Action started.';
+                        pushAlert(year, 'info', message);
+                        if (result && result.reload) {
+                            loadYear(year);
+                        } else {
+                            setTimeout(() => loadYear(year), 3000);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        pushAlert(year, 'danger', err.message || 'Unable to trigger action');
+                    })
+                    .finally(() => setLoading(panel, false));
+            }
+
+            function postAction(year, action) {
+                if (!API_BASE) {
+                    return Promise.resolve({ message: `Simulated ${action} for ${year}.`, reload: false });
+                }
+                return fetch(`${API_BASE}/years/${year}/${action}`, { method: 'POST' })
+                    .then(resp => {
+                        if (!resp.ok) {
+                            throw new Error(`API error (${resp.status})`);
+                        }
+                        return resp.json();
+                    });
+            }
+
+            function renderSummary(panel, summary) {
+                panel.querySelectorAll('[data-field]').forEach(el => {
+                    const field = el.getAttribute('data-field');
+                    if (field === 'missing_geocode') {
+                        el.textContent = summary.missing_geocode != null ? `${summary.missing_geocode} missing` : '-- missing';
+                    } else {
+                        el.textContent = summary[field] != null ? summary[field] : '--';
+                    }
+                });
+            }
+
+            function renderMap(panel, summary) {
+                const iframe = panel.querySelector('[data-map-frame]');
+                const placeholder = panel.querySelector('[data-map-placeholder]');
+                if (summary && summary.map_url) {
+                    iframe.src = summary.map_url;
+                    iframe.dataset.mapUrl = summary.map_url;
+                    placeholder.classList.add('d-none');
+                } else {
+                    iframe.removeAttribute('src');
+                    iframe.dataset.mapUrl = '';
+                    placeholder.classList.remove('d-none');
+                }
+            }
+
+            function renderTable(year) {
+                const panel = document.querySelector(`[data-year-panel="${year}"]`);
+                const body = panel.querySelector(`[data-table-body="${year}"]`);
+                const search = (panel.querySelector(`[data-search="${year}"]`)?.value || '').toLowerCase();
+                if (!state[year]) {
+                    body.innerHTML = '';
+                    return;
+                }
+                const rows = (state[year].raw.trees || []).filter(item => {
+                    if (!search) return true;
+                    return [item.name, item.full_address, item.optimized_route]
+                        .join(' ').toLowerCase().includes(search);
+                });
+                body.innerHTML = rows.map(row => `
+                    <tr>
+                        <td><input class="form-check-input" type="checkbox" data-row-select value="${row.id}"></td>
+                        <td>
+                            <strong>${row.name || 'Unknown'}</strong>
+                            ${row.notes ? `<div class="text-muted small">${row.notes}</div>` : ''}
+                        </td>
+                        <td>${row.full_address || '—'}</td>
+                        <td><span class="badge text-bg-success">${row.trees || 0}</span></td>
+                        <td><span class="badge rounded-pill text-bg-dark">${row.optimized_route || '-'}</span></td>
+                        <td>
+                            ${row.geocoded ? '<span class="status-pill status-ok">Geocoded</span>' : '<span class="status-pill status-warn">Missing Geo</span>'}
+                        </td>
+                        <td>${row.last_updated ? formatDate(row.last_updated) : '—'}</td>
+                    </tr>
+                `).join('');
+                panel.querySelector('[data-row-count]').textContent = `${rows.length} rows`;
+                updateSelection(year);
+            }
+
+            function updateSelection(year) {
+                const panel = document.querySelector(`[data-year-panel="${year}"]`);
+                const selections = Array.from(panel.querySelectorAll('[data-row-select]:checked')).map(el => el.value);
+                panel.querySelector('[data-selection-count]').textContent = `${selections.length} stops selected.`;
+                const adjustButton = panel.querySelector('[data-action="adjust"][data-year="' + year + '"]');
+                adjustButton.disabled = selections.length === 0;
+            }
+
+            function handleAdjust(year) {
+                const panel = document.querySelector(`[data-year-panel="${year}"]`);
+                const newRouteInput = panel.querySelector(`[data-new-route="${year}"]`);
+                const newRoute = (newRouteInput.value || '').toUpperCase().trim();
+                const selectedIds = Array.from(panel.querySelectorAll('[data-row-select]:checked')).map(el => el.value);
+                if (!selectedIds.length) {
+                    pushAlert(year, 'warning', 'Select at least one stop to adjust.');
+                    return;
+                }
+                if (!newRoute) {
+                    pushAlert(year, 'warning', 'Enter the new route letter.');
+                    newRouteInput.focus();
+                    return;
+                }
+
+                if (!API_BASE) {
+                    pushAlert(year, 'info', `Simulated adjustment to route ${newRoute} for ${selectedIds.length} stops.`);
+                    newRouteInput.value = '';
+                    panel.querySelector(`[data-select-all="${year}"]`).checked = false;
+                    panel.querySelectorAll('[data-row-select]').forEach(cb => cb.checked = false);
+                    updateSelection(year);
+                    return;
+                }
+
+                const payload = { new_route: newRoute, ids: selectedIds };
+                const panelEl = document.querySelector(`[data-year-panel="${year}"]`);
+                setLoading(panelEl, true);
+                fetch(`${API_BASE}/years/${year}/adjust`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                    .then(resp => {
+                        if (!resp.ok) {
+                            throw new Error(`API error (${resp.status})`);
+                        }
+                        return resp.json();
+                    })
+                    .then(result => {
+                        pushAlert(year, 'success', result.message || 'Routes updated.');
+                        newRouteInput.value = '';
+                        panel.querySelector(`[data-select-all="${year}"]`).checked = false;
+                        panel.querySelectorAll('[data-row-select]').forEach(cb => cb.checked = false);
+                        updateSelection(year);
+                        loadYear(year);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        pushAlert(year, 'danger', err.message || 'Unable to adjust routes.');
+                    })
+                    .finally(() => setLoading(panelEl, false));
+            }
+
+            function pushAlert(year, type, message) {
+                const panel = document.querySelector(`[data-year-panel="${year}"]`);
+                const container = panel.querySelector('[data-alerts]');
+                const alert = document.createElement('div');
+                alert.className = `alert alert-${type}`;
+                alert.role = 'alert';
+                alert.textContent = message;
+                container.appendChild(alert);
+                setTimeout(() => alert.remove(), 7000);
+            }
+
+            function setLoading(panel, isLoading) {
+                const overlay = panel.querySelector('[data-loading]');
+                if (!overlay) return;
+                overlay.classList.toggle('d-none', !isLoading);
+            }
+
+            function formatDate(value) {
+                if (!value) return '—';
+                const date = new Date(value);
+                if (isNaN(date.getTime())) return value;
+                return date.toLocaleString();
+            }
+
+            // Load default active tab
+            const defaultTab = document.querySelector('[data-year-tab].active');
+            if (defaultTab) {
+                loadYear(defaultTab.getAttribute('data-year-tab'));
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -213,3 +213,134 @@ footer {
     color: rgba(255, 135, 0, 1) !important;
     margin-bottom: 1.5rem !important;
 }
+
+/* Route Tools Page */
+.route-tools-hero {
+    background: linear-gradient(120deg, #064e3b, #047857);
+    min-height: 280px;
+}
+
+.route-tabs .nav-link {
+    font-weight: 600;
+    color: #047857;
+}
+
+.route-tabs .nav-link.active {
+    background-color: #047857;
+    color: #fff;
+}
+
+.year-panels {
+    margin-top: 2rem;
+}
+
+.year-panel {
+    display: none;
+    position: relative;
+}
+
+.year-panel.active {
+    display: block;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .panel-header {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+.summary-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    height: 100%;
+}
+
+.summary-card .label {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+}
+
+.map-card,
+.action-card,
+.data-card,
+.adjust-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    margin-top: 1.5rem;
+}
+
+.map-card iframe {
+    border: none;
+    min-height: 360px;
+    background: #f1f5f9;
+}
+
+.map-placeholder {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    background: #fff7ed;
+    border: 1px dashed #fb923c;
+    color: #92400e;
+}
+
+.action-card .btn {
+    border-radius: 999px;
+}
+
+.data-card table {
+    margin-bottom: 0;
+}
+
+.data-search {
+    max-width: 340px;
+}
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-pill.status-ok {
+    background: rgba(16, 185, 129, 0.15);
+    color: #047857;
+}
+
+.status-pill.status-warn {
+    background: rgba(251, 191, 36, 0.15);
+    color: #975a16;
+}
+
+.loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+}
+
+.alerts .alert {
+    margin-bottom: 0.5rem;
+}
