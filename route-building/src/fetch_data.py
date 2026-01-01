@@ -135,6 +135,128 @@ def save_local_copy(df: pd.DataFrame, year: str, output_path: Optional[str] = No
     print(f"Data saved to: {output_file}")
 
 
+def check_syntax_errors(df: pd.DataFrame) -> None:
+    """
+    Check for data syntax errors and quality issues.
+    
+    Checks for:
+    1. Numbers in the Street column (should be in House # column)
+    2. Empty required fields
+    
+    Args:
+        df: DataFrame to check
+    """
+    print("\n" + "=" * 60)
+    print("SYNTAX & DATA QUALITY CHECK")
+    print("=" * 60)
+    
+    issues_found = False
+    
+    # Check for numbers at the start of Street column
+    if 'Street' in df.columns:
+        df_temp = df.copy()
+        df_temp['Street'] = df_temp['Street'].astype(str)
+        
+        # Find streets that start with digits
+        streets_with_numbers = df_temp[df_temp['Street'].str.match(r'^\d', na=False)]
+        
+        if len(streets_with_numbers) > 0:
+            issues_found = True
+            print(f"\n⚠️  Found {len(streets_with_numbers)} entries with numbers at start of Street column:")
+            print("   (House numbers should be in the 'House #' column, not 'Street' column)")
+            for _, row in streets_with_numbers.iterrows():
+                print(f"    - {row['Name']}: House #='{row.get('House #', '')}', Street='{row['Street']}'")
+        else:
+            print("\n✓ No numbers found at start of Street column")
+    
+    # Check for empty House # when Street has data
+    if 'House #' in df.columns and 'Street' in df.columns:
+        df_temp = df.copy()
+        df_temp['House #'] = df_temp['House #'].astype(str)
+        df_temp['Street'] = df_temp['Street'].astype(str)
+        
+        missing_house_num = df_temp[
+            (df_temp['House #'].isin(['', 'nan', 'None'])) & 
+            (~df_temp['Street'].isin(['', 'nan', 'None']))
+        ]
+        
+        if len(missing_house_num) > 0:
+            issues_found = True
+            print(f"\n⚠️  Found {len(missing_house_num)} entries missing House # but have Street:")
+            for _, row in missing_house_num.iterrows():
+                print(f"    - {row['Name']}: Street='{row['Street']}', City='{row.get('City', '')}'")
+        else:
+            print("✓ All entries with streets have house numbers")
+    
+    if not issues_found:
+        print("\n✓ All syntax checks passed")
+    
+    print("\n" + "=" * 60)
+
+
+def check_duplicates(df: pd.DataFrame) -> None:
+    """
+    Check for duplicate entries in the data.
+    
+    Checks for duplicates based on:
+    1. Full address (House #, Street, City)
+    2. Name
+    3. Exact duplicate rows
+    
+    Args:
+        df: DataFrame to check for duplicates
+    """
+    print("\n" + "=" * 60)
+    print("DUPLICATE DETECTION")
+    print("=" * 60)
+    
+    # Check for exact duplicate rows
+    exact_dupes = df[df.duplicated(keep=False)]
+    if len(exact_dupes) > 0:
+        print(f"\n⚠️  Found {len(exact_dupes)} exact duplicate rows:")
+        print(exact_dupes[['Name', 'House #', 'Street', 'City', 'Number of Trees']].to_string())
+    else:
+        print("\n✓ No exact duplicate rows found")
+    
+    # Check for duplicate addresses
+    address_cols = ['House #', 'Street', 'City']
+    if all(col in df.columns for col in address_cols):
+        # Create full address for comparison
+        df_temp = df.copy()
+        df_temp['_full_address'] = (
+            df_temp['House #'].astype(str) + ' ' + 
+            df_temp['Street'].astype(str) + ', ' + 
+            df_temp['City'].astype(str)
+        )
+        
+        address_dupes = df_temp[df_temp.duplicated(subset=['_full_address'], keep=False)]
+        if len(address_dupes) > 0:
+            print(f"\n⚠️  Found {len(address_dupes)} entries with duplicate addresses:")
+            for address in address_dupes['_full_address'].unique():
+                dupes = address_dupes[address_dupes['_full_address'] == address]
+                print(f"\n  Address: {address}")
+                for _, row in dupes.iterrows():
+                    print(f"    - {row['Name']}: {row['Number of Trees']} tree(s)")
+        else:
+            print("✓ No duplicate addresses found")
+    
+    # Check for duplicate names
+    if 'Name' in df.columns:
+        name_dupes = df[df.duplicated(subset=['Name'], keep=False)]
+        if len(name_dupes) > 0:
+            print(f"\n⚠️  Found {len(name_dupes)} entries with duplicate names:")
+            for name in name_dupes['Name'].unique():
+                dupes = name_dupes[name_dupes['Name'] == name]
+                print(f"\n  Name: {name}")
+                for _, row in dupes.iterrows():
+                    addr = f"{row.get('House #', '')} {row.get('Street', '')}, {row.get('City', '')}"
+                    print(f"    - {addr}: {row.get('Number of Trees', '?')} tree(s)")
+        else:
+            print("✓ No duplicate names found")
+    
+    print("\n" + "=" * 60)
+
+
 def main():
     """Main execution function."""
     print("=" * 60)
@@ -153,6 +275,12 @@ def main():
         # Show first few rows
         print("\nFirst 3 rows:")
         print(df.head(3))
+        
+        # Check for syntax errors and data quality
+        check_syntax_errors(df)
+        
+        # Check for duplicates
+        check_duplicates(df)
         
         # Save local copy
         save_local_copy(df, year)

@@ -12,7 +12,7 @@ import folium
 from typing import Optional
 
 
-def load_optimized_routes(csv_path: str = 'data/2025-optimized-routes.csv') -> pd.DataFrame:
+def load_optimized_routes(csv_path: str = 'data/2026-optimized-routes.csv') -> pd.DataFrame:
     """Load optimized routes data."""
     file_path = Path(csv_path)
     if not file_path.exists():
@@ -33,7 +33,7 @@ def load_optimized_routes(csv_path: str = 'data/2025-optimized-routes.csv') -> p
     return df_valid
 
 
-def create_route_map(df: pd.DataFrame, output_path: str = 'data/2025-routes-map.html'):
+def create_route_map(df: pd.DataFrame, output_path: str = 'data/2026-routes-map.html'):
     """
     Create an interactive Folium map with all routes.
     
@@ -172,19 +172,19 @@ def main():
     
     if test_mode:
         # Try clustered first, fall back to optimized
-        if Path('data/2025-test-clustered-routes.csv').exists():
-            input_path = 'data/2025-test-clustered-routes.csv'
-        else:
-            input_path = 'data/2025-test-optimized-routes.csv'
-        output_path = 'data/2025-test-routes-map.html'
-        print("\n🧪 TEST MODE: Using test data")
-    else:
-        # Try clustered first, fall back to optimized
         if Path('data/2025-clustered-routes.csv').exists():
             input_path = 'data/2025-clustered-routes.csv'
         else:
             input_path = 'data/2025-optimized-routes.csv'
         output_path = 'data/2025-routes-map.html'
+        print("\n🧪 TEST MODE: Using 2025 dataset")
+    else:
+        # Try clustered first, fall back to optimized
+        if Path('data/2026-clustered-routes.csv').exists():
+            input_path = 'data/2026-clustered-routes.csv'
+        else:
+            input_path = 'data/2026-optimized-routes.csv'
+        output_path = 'data/2026-routes-map.html'
     
     # Load routes
     df = load_optimized_routes(input_path)
