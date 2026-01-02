@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route AA - Pickup Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3498DB;
+        }
+        .header-left {
+            flex: 1;
+        }
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: #ECF0F1;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .summary-item strong {
+            display: block;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+        .maps-section {
+            background: #E8F5E9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .maps-section a {
+            color: #2E7D32;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .maps-section a:hover {
+            text-decoration: underline;
+        }
+        .qr-section {
+            text-align: center;
+            padding: 10px;
+        }
+        .qr-section img {
+            width: 180px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .qr-section p {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: #3498DB;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #2980B9;
+        }
+        td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        tr:nth-child(even) {
+            background: #ECF0F1;
+        }
+        tr:hover {
+            background: #D5DBDB;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .editable {
+            background: #FFF9C4 !important;
+            min-width: 80px;
+        }
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .maps-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Route AA - Pickup Sheet</h1>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <strong>Total Pickups</strong>
+                        <span>1</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Total Trees</strong>
+                        <span>1</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Driver</strong>
+                        <span>_______________</span>
+                    </div>
+                </div>
+                
+                <div class='maps-section'><strong>🗺️ Google Maps Directions:</strong><br><a href='https://www.google.com/maps/dir/10615%2C%20Beckwood%20Dr%2C%20Austin%2C%20TX' target='_blank'>Open Route in Google Maps →</a></div>
+            </div>
+            
+            <div class='qr-section'><img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZoAAAGaAQAAAAAefbjOAAADQElEQVR4nO1cW46jQAx0B6T57Eh7gByF3CBHGu3N4Cg5QCT4jETkVbndMNmfXZZoGdJVHwwQLMBYdvnRE1QWozsslxGhkIOKcFARDirCQUU4qAgHFbEnRQRHLSIDNoahlnCWRwjnIV9w3uTxFoJCaxQhCkhjf/pKRSIOe/utSud8M13XUuWOd1bE4A5A27QxO0BecYSPSG6k3tk7LQKFHNNXdgSJsIPLPWh3GSU0/Y9RZJAnUHsFWYTatrnWEpprEO1O96A7e6cDhV6giAh+AB9xBp8Mp1G0BaOQ4UNTOFEdX3KnRaDQVoroLJM45rPNFXYA2/hMHPORUo2tHm8ZKLQ+auh0rCJwBXHEHsjEyQ6fAwdV/v7Zp2HOOduY7AB5qB+mjYHZZwkWESfiAGMwO0D2aewhFyVgNLSIgnKNIFLDNVQaJN7BGaoxSOxVLA+VONa6i3c6UGi1IhQlKWkUdjBkAtlYcmGlbFS2wTbX32khKLRR1Egws7A81AIGgkiubDut8Ov4nRzvqAiZjUHnikOiC1NR2/saIBi0iFI6XT2iRu50JT7pkSQ7DwQR+oiCosaYc42545nPzUZDiyjHIvo5OOTyxOQtPCOljyirHqFelEh0wYJIGojI9QirWpFHlJRriKP6PdeYS1eMGkVNzKjXJ/OIzGf/CDYxYxeosh6x14/7z8xSzTNYUcIST+trpJyTPKLIOcvWClHTQJ3kesTc7iKPKKevMRxFMR0j3dlG68Zau0uPvR7Dlmh6xKlr/s3f6UCh11So1H2E98Uz2/TyhO+xZlmU7Q0fHj9+HjF8fTSzuGO4CvQyjli+seHj/S0o9KpOF/BlPmKa00+VCfgI8ohSeETwowqT+Gh6D4+goBBB4g0dcozox1ueyv7m73Sg0HpFNOYg8tDU08IuwAiGmcrqOy0DhTZf0xWwdMsXeWI02+rZmNQWzFWRR5S3gkdSmEDOKQNW8AQR7S63mj6iXKEKAQOl7Kia1mtgiZe2afZy88f7Myj0Ch8RwRHS8s5HrShYGZ/U7oQfooJ8kkeUtl5DknvIP0yTU/MaDruYc5ZvLRT4n8l28Z0OFEqgIhxUhIOKcFARDirC8f+Y5S9Y4qBQhM/K/QAAAABJRU5ErkJggg==' alt='QR Code for Google Maps'><p>Scan for directions</p></div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th class="text-center">Unit #</th>
+                    <th class="text-center">Trees<br>Expected</th>
+                    <th>Phone</th>
+                    <th class="text-center">Home?<br>(Y/N)</th>
+                    <th>Gate<br>Code</th>
+                    <th>Comments</th>
+                    <th class="text-center">Trees<br>Picked Up</th>
+                    <th class="text-center">Amount<br>Collected</th>
+                    <th class="text-center">Cash/<br>Check</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>Sarah Mogab</td>
+                <td>10615, Beckwood Dr, Austin, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5123001119</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

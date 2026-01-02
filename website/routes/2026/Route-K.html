@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route K - Pickup Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3498DB;
+        }
+        .header-left {
+            flex: 1;
+        }
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: #ECF0F1;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .summary-item strong {
+            display: block;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+        .maps-section {
+            background: #E8F5E9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .maps-section a {
+            color: #2E7D32;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .maps-section a:hover {
+            text-decoration: underline;
+        }
+        .qr-section {
+            text-align: center;
+            padding: 10px;
+        }
+        .qr-section img {
+            width: 180px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .qr-section p {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: #3498DB;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #2980B9;
+        }
+        td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        tr:nth-child(even) {
+            background: #ECF0F1;
+        }
+        tr:hover {
+            background: #D5DBDB;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .editable {
+            background: #FFF9C4 !important;
+            min-width: 80px;
+        }
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .maps-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Route K - Pickup Sheet</h1>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <strong>Total Pickups</strong>
+                        <span>10</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Total Trees</strong>
+                        <span>10</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Driver</strong>
+                        <span>_______________</span>
+                    </div>
+                </div>
+                
+                <div class='maps-section'><strong>🗺️ Google Maps Directions:</strong><br><a href='https://www.google.com/maps/dir/3609%2C%20Windhill%20Loop%2C%20Cedar%20Park%2C%20TX/3714%2C%20Newland%20Dr.%2C%20Cedar%20Park%2C%20TX/3517%2C%20Laurel%20Bay%20Loop%20%2C%20Cedar%20Park%2C%20TX/4016%2C%20Witte%20Cove%2C%20Cedar%20Park%2C%20TX/4116%2C%20Geary%20Street%2C%20Cedar%20Park%2C%20TX/4205%2C%20Kingsburg%20Dr.%20%2C%20Cedar%20Park%2C%20TX/3729%2C%20Kearney%20Lane%2C%20Leander%2C%20TX/3725%2C%20Kearney%20Lane%20Round%20Rock%2C%20Leander%2C%20TX/4301%2C%20S%20Summercrest%20Loop%2C%20Cedar%20Park%2C%20TX/3701%2C%20Lagoona%20Drive%20%2C%20Leander%2C%20TX' target='_blank'>Open Route in Google Maps →</a></div>
+            </div>
+            
+            <div class='qr-section'><img src='data:image/png;base64,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' alt='QR Code for Google Maps'><p>Scan for directions</p></div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th class="text-center">Unit #</th>
+                    <th class="text-center">Trees<br>Expected</th>
+                    <th>Phone</th>
+                    <th class="text-center">Home?<br>(Y/N)</th>
+                    <th>Gate<br>Code</th>
+                    <th>Comments</th>
+                    <th class="text-center">Trees<br>Picked Up</th>
+                    <th class="text-center">Amount<br>Collected</th>
+                    <th class="text-center">Cash/<br>Check</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>Corinne</td>
+                <td>3609, Windhill Loop, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>7185933865</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>Check will be in white Ridwell box on porch</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Eric Tusken</td>
+                <td>3714, Newland Dr., Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>512-630-4236</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Our Address is in Round Rock, but it’s Leander ISD and very close to the border of Cedar Park.  It’s only 5.6 miles to the Cedar Park Recreation Center, so I assume it’s within your pickup area.  </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Grace Simunek </td>
+                <td>3517, Laurel Bay Loop , Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>774 930 9246</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>If we aren't home we will leave it under the doormat </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Kate Benjamin</td>
+                <td>4016, Witte Cove, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>9139094393</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Our address is technically in Round Rock, but you picked our tree up last year.  Let me know if this is an issue.  Thank you!</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Michael Sample</td>
+                <td>4116, Geary Street, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>2814147373</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Miranda Bryant</td>
+                <td>4205, Kingsburg Dr. , Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5084918617</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Round Rock</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Sarah Sampson</td>
+                <td>3729, Kearney Lane, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>9492301573</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>78681 Zip ( Round Rock) </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Susan Haynie</td>
+                <td>3725, Kearney Lane Round Rock, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>760-215-3890</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Terry Hall</td>
+                <td>4301, S Summercrest Loop, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5128010008</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Tree & payment will be in the front yard near picnic table:)</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Wesley Flower</td>
+                <td>3701, Lagoona Drive , Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>7039676295</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>The Address is technically in Round Rock, but within the limits noted on the site map </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

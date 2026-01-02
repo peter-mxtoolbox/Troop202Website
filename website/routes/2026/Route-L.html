@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route L - Pickup Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3498DB;
+        }
+        .header-left {
+            flex: 1;
+        }
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: #ECF0F1;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .summary-item strong {
+            display: block;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+        .maps-section {
+            background: #E8F5E9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .maps-section a {
+            color: #2E7D32;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .maps-section a:hover {
+            text-decoration: underline;
+        }
+        .qr-section {
+            text-align: center;
+            padding: 10px;
+        }
+        .qr-section img {
+            width: 180px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .qr-section p {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: #3498DB;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #2980B9;
+        }
+        td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        tr:nth-child(even) {
+            background: #ECF0F1;
+        }
+        tr:hover {
+            background: #D5DBDB;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .editable {
+            background: #FFF9C4 !important;
+            min-width: 80px;
+        }
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .maps-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Route L - Pickup Sheet</h1>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <strong>Total Pickups</strong>
+                        <span>12</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Total Trees</strong>
+                        <span>12</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Driver</strong>
+                        <span>_______________</span>
+                    </div>
+                </div>
+                
+                <div class='maps-section'><strong>🗺️ Google Maps Directions:</strong><br><a href='https://www.google.com/maps/dir/5025%2C%20Carsoli%20Lane%2C%20Leander%2C%20TX/3917%2C%20Veneto%20Cir%2C%20Leander%2C%20TX/1300%2C%20Lions%20lair%2C%20Leander%2C%20TX/3513%2C%20Venezia%20View%2C%20Leander%2C%20TX/1613%2C%20Bardella%20Dr%2C%20Leander%2C%20TX/1740%2C%20Siena%20Sunset%20Rd%2C%20Leander%2C%20TX/1612%2C%20Ferrari%20Dr%2C%20Leander%2C%20TX/3713%2C%20Medicine%20Hat%2C%20Leander%2C%20TX/1440%2C%20Siena%20Sunset%20Road%2C%20Leander%2C%20TX/4429%2C%20Apollonia%20Way%2C%20Leander%2C%20TX/928%2C%20Trevi%20Fontana%20drive%2C%20Leander%2C%20TX/2416%2C%20Montello%20Court%2C%20Leander%2C%20TX' target='_blank'>Open Route in Google Maps →</a></div>
+            </div>
+            
+            <div class='qr-section'><img src='data:image/png;base64,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' alt='QR Code for Google Maps'><p>Scan for directions</p></div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th class="text-center">Unit #</th>
+                    <th class="text-center">Trees<br>Expected</th>
+                    <th>Phone</th>
+                    <th class="text-center">Home?<br>(Y/N)</th>
+                    <th>Gate<br>Code</th>
+                    <th>Comments</th>
+                    <th class="text-center">Trees<br>Picked Up</th>
+                    <th class="text-center">Amount<br>Collected</th>
+                    <th class="text-center">Cash/<br>Check</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>Alex Chandy</td>
+                <td>5025, Carsoli Lane, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>2813522263</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>On the curb, in front of the house.</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Arun</td>
+                <td>3917, Veneto Cir, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5129066765</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Danielle Armstrong</td>
+                <td>1300, Lions lair, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5125290254</td>
+                <td class="text-center">No</td>
+                <td>1600</td>
+                <td>Located by driveway </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Hans Krebs</td>
+                <td>3513, Venezia View, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>206-790-3820</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Jeff Amato</td>
+                <td>1613, Bardella Dr, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5126604765</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Jill Bonifield  </td>
+                <td>1740, Siena Sunset Rd, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5122779195</td>
+                <td class="text-center">No</td>
+                <td>Not required </td>
+                <td>Tree is out front by the curb - thank you! </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>John Koeter</td>
+                <td>1612, Ferrari Dr, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5124310374</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Laura Davis</td>
+                <td>3713, Medicine Hat, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>8324446428</td>
+                <td class="text-center">Yes</td>
+                <td>1800</td>
+                <td>Payment will be in envelope under doormat </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Mary Coats</td>
+                <td>1440, Siena Sunset Road, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>4043145395</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Thank you! </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Megan Vickery</td>
+                <td>4429, Apollonia Way, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>832-642-2822</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Tree should be in driveway with payment in envelope </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Phong Nguyen</td>
+                <td>928, Trevi Fontana drive, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>7143606584</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Payment will be left at front door on bench</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Terrell McRee</td>
+                <td>2416, Montello Court, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5122216299</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

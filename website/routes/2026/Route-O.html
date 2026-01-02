@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route O - Pickup Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3498DB;
+        }
+        .header-left {
+            flex: 1;
+        }
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: #ECF0F1;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .summary-item strong {
+            display: block;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+        .maps-section {
+            background: #E8F5E9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .maps-section a {
+            color: #2E7D32;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .maps-section a:hover {
+            text-decoration: underline;
+        }
+        .qr-section {
+            text-align: center;
+            padding: 10px;
+        }
+        .qr-section img {
+            width: 180px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .qr-section p {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: #3498DB;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #2980B9;
+        }
+        td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        tr:nth-child(even) {
+            background: #ECF0F1;
+        }
+        tr:hover {
+            background: #D5DBDB;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .editable {
+            background: #FFF9C4 !important;
+            min-width: 80px;
+        }
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .maps-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Route O - Pickup Sheet</h1>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <strong>Total Pickups</strong>
+                        <span>20</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Total Trees</strong>
+                        <span>20</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Driver</strong>
+                        <span>_______________</span>
+                    </div>
+                </div>
+                
+                <div class='maps-section'><strong>🗺️ Google Maps Directions:</strong><br><a href='https://www.google.com/maps/dir/310%2C%20STEER%20ACRES%20CT%2C%20Cedar%20Park%2C%20TX/305%2C%20Kati%20Ln%2C%20Cedar%20Park%2C%20TX/4023%2C%20Wilderness%20Path%20Bnd%2C%20Cedar%20Park%2C%20TX/3902%2C%20Simon%20Ridge%20Ct%2C%20Cedar%20Park%2C%20TX/310%2C%20Steer%20Acres%20Ct%2C%20Cedar%20Park%2C%20TX/311%2C%20South%20Frontier%20Lane%2C%20Cedar%20Park%2C%20TX/3902%2C%20Black%20Gold%20Bend%2C%20Cedar%20Park%2C%20TX/4219%2C%20Arrow%20Wood%20Rd%2C%20Cedar%20Park%2C%20TX/4016%2C%20Bison%20Bnd%2C%20Cedar%20Park%2C%20TX/319%2C%20Angus%2C%20Cedar%20Park%2C%20TX/4027%2C%20Anderson%20Bluff%20Dr%2C%20Cedar%20Park%2C%20TX/4107%2C%20Charbray%20Ct%2C%20Cedar%20Park%2C%20TX/4202%2C%20TIGER%20HORSE%20TRL%2C%20Cedar%20Park%2C%20TX/303%2C%20South%20Frontier%2C%20Cedar%20Park%2C%20TX/3814%2C%20AVERY%20WOODS%20LANE%2C%20Cedar%20Park%2C%20TX/3805%2C%20Katie%20Ln%2C%20Cedar%20Park%2C%20TX/4316%2C%20Remington%20Rd%2C%20Cedar%20Park%2C%20TX/102%2C%20Dasher%20Drive%2C%20Cedar%20Park%2C%20TX/4031%2C%20Logan%20Ridge%20Dr%2C%20Cedar%20Park%2C%20TX/212%2C%20Walsh%20Hill%20Trl%2C%20Cedar%20Park%2C%20TX' target='_blank'>Open Route in Google Maps →</a></div>
+            </div>
+            
+            <div class='qr-section'><img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABJIAAASSAQAAAADClvmyAAAX+0lEQVR4nO2dQW7jyLJFD68N1NAGegG9FNUOekkPvaTegb2UWkADrmEBNvKDZGZEJO1BvT95lwLPQGWJIiUQiVBU5I0bS8ONV+GH8EP4IfwQfgg/hB/CD+GH8EP4IfwQfgg/hB/CD+GH8EP4IfwQfgg/hB/CD+GH8EP4IfwQfgg/hB/CD+GH8EP4IfwQfgg/hOt3WjqPLN9/rg/ra9tfy/P6Fx8Lr8/bQz8A28PG9r5le/qxbOfufy3P20M+jUsty7K9Nq43Pv+7+X3yQvgh/BB+CD+EH8IPYUhb4bb98/bQuL1Bf2jv69F32svT+pa39c3rW9ietvd+gZen9/XNbT2wvjmuvJ22f8Y4t73wsH7QdvntottHrq/F13hxvE/CD+GH8EP4IfwQfgg/hCFtD6B79F6D6h5St+i9xvH1AGukXqP3FqT3N+xv2YN0D809om+hnn6p/TP6+7a/tmDePy3/yjOuOH7m9ST8EH4IP4Qfwg9xgjjOnl1vyXbPvVtPrHs6vWfme9o9Qv1+lYj347SRy5f3jQ8aQT+S/CuO38N6En4IP4Qfwg/hh/CP461XTraAHFGZLdCuzBWWLd73dLpXYrIm07Pr7Srj3C2sj8g/Dlz5+P2sJ+GH8EP4IfwQfogT1MdXSrK917NbVsBHst3DcJbLo2YeR6OEXmrh2+X3c0fi3wszV338HtaT8EP4IfwQfgg/hO13et3kIqu0ZI22y3+2ZPvHt/WvTVDyre0ClduP/rC/tufeP0K+sr0WR/enW/QOcct2+f3cH/0tm4ZlY/5OVgg/hB/CD+GH8EP4IfwQhrQDvZ697WmmluS95uP5Ws/Hq15lejqu13c8eyWm11oyHz98A8f7JPwQfgg/hB/CD+GH8EMY0voOZe5kZuFjFM6JGndKBPvW5dj73Imty6pUHJ+U8pXY7MyfhK5cueL4ydeT8EP4IfwQfgg/hHUcbxl8uxyQmjW/DK14Dbn5dArX025pLb9XoeGuZknF+aU7vIP1JPwQfgg/hB/CD2FIi2pKkZFE9aPrvZ9im3IUTabwP0SFfVO0FlJSVFiqKT377+G//I/gysfPvp6EH8IP4YfwQ/ghfOM4WQav9ZJUrpANQtnjmVLC/tBliLWuMs7olZg5/FcVev8NuOrjZ15Pwg/hh/BD+CH8EIa0PbKOGve04znU4IztzFIvKc2aITGP34CDFD2vV0vj+5vXS8QHXfn42deT8EP4IfwQfgg/hCEtKPF5j6cR21+mts1eKZ+E5WmZkj34peTdk/KqdflSDnPF8bOvJ+GH8EP4IfwQfghDWknA98CdosIoi7zFgdFRXyJ6qahv54QPSymrr2SZJaouB3utq65y+vUk/BB+CD+EH8IPYUgrNY+slI9dy6EifC86lOGbElWXoUqcNItRZQ+TlSzRRAm9Rv78Bo73Sfgh/BB+CD+EH8IP4YcwpGUqntrB3ls/NCwvw9Yw9SWZP2e1uxqv7AG+llmy7X+qraeT4qU7vIP1JPwQfgg/hB/CD2FI6zrBnjWnOrC4HLYoapcadyTqc0DObqLhqhJ69LBbydpN9BXV8rvjfRJ+CD+EH8IP4YfwQ/ghrPUqLcN1CsG73OR9lFlCZBK597TtmcqV6ltb35K1lvXTe1m9Rv4rjp95PQk/hB/CD+GH8EMY0orGcCqkTJLDNmtYxmvhbVjK5emgUts2p+3MrLz3rP7Kx+9lPQk/hB/CD+GH8EMY0jrZ/bMR5Y6yu9mqtW3xni0BuXtnlbpKFMmLO3lxxD3IEK98/OTrSfgh/BB+CD+EH8K4Pt7JLLxucbYUeI9I3ae5RXoerUK9kz+afFaqQOVTd39pA92fOt4n4YfwQ/gh/BB+CD+EH8KQtkXvkkSn0iRdDtvkoFI6eGZVYjFjiTP6dmYU00e9PeXk0/iJK46fez0JP4Qfwg/hh/BDGMdxQg74ufO+ZTodYfjgZduDeZW51D3SLKZHuh91mqyPX3WV068n4YfwQ/gh/BB+CENaMCbYZ6NOtSZs4ZuyP41aeA5RrlOTJ/ViHUTx1Zi3ySvxqquceT0JP4Qfwg/hh/BDGNL22MmsNAnf2nQ+bGWoZk5mrhOXJ+15Bu5UG2b0zoeNqWZ+1cdPvJ6EH8IP4YfwQ/ghDGmRitfG+TIheQgIQ+qdvfqZhY92n5Sd1yw8J/6kc8s0nrkm6lccP/N6En4IP4Qfwg/hh7Cuq7RDFTuVKy9T3+d+WvTyTLKUjNR1K7TYYeXTMiIuDbmuOH7y9ST8EH4IP4Qfwg9hSOvxOSf0pIh8dARRlCvT3mfukcbR6sNSfg1qm34twkRxJScuX3WVE68n4YfwQ/gh/BB+CENa5tmzieyUMD+MUH+cLfHJgHaqmaeLVkxui/p4afEvlZgrjp97PQk/hB/CD+GH8EP4fqefj/1hDcPL9/Wl1z/XhPnnsrTWfi35lrqduR7dn25HQ13++uevpf29rG/mo597+7G9ZX0a+f3+137lZdk/1/o+OSH8EH4IP4Qfwg/hhzCkHTLuTJ2rBryV7LpKCb8Y83acDFQkhwcx4zSU+ernvIv1JPwQfgg/hB/CD3GC+jjZrTP31u+EnDz8UA417mzOL1qXfm4VvJR5zPu5Vx/QPawn4YfwQ/gh/BB+CEPazujGzybMSWj4MA3syRw9di1z3H2Vk/crZ7m8XCU+8lCNv/Y5z7yehB/CD+GH8EP4IQxpGVRL0SR3Mldu4S6bczfTSqt03m9vTu15XnTq+RmxPT8jJy5fcfzc60n4IfwQfgg/hB/CkNb7dmqKXe3Ds6i98imnTvVJ7d0sbUEhSs86TZoeHsrlVx/Q6deT8EP4IfwQfgg/hCGtk97gIRHcFd05/CED/FQfT93h3Pw5+W4dPG8zv5+q51c+fvb1JPwQfgg/hB/CD+H6nZZd8Len3R/LpiccBx7a8p/JmHw/8fb2sbS/n1cV4SY0fF6ViuvDSvt7+da6SDFbPn9+6z8Y6/uW70PlWB7qd/JC+CH8EH4IP4Qfwg/hh/DjcXtsr89vjddlDch/bfnzv4+1UXPl9a/3x+X29vG4h+HbP4RqfFOIL7Q1Ui/rr8Fya9tFWRpPPUC3rkd/psHDO69//bu0cWD/Gsb3Sfgh/BB+CD+EH8IP4Yfwro+/xFi2UBsejRBX0owlay11xzNMbtMJaz8thjLXKs4na9tLr3Lm9ST8EH4IP4Qfwg/h7XdImhnOwhPmMZzhdJtjPeuQzpSOZ4dR6hNjozRsbJMrjp9+PQk/hB/CD+GH8ENY6w5bxOfSa1mNCx/m4Q8j484Mvrd3fu7dLAMmJrliGSB36Q7vYj0JP4Qfwg/hh/BDGNJmAWEZ+bAfjQDfcormrCwsIbyIUUZn59wamtMopm6iOPeqq5x8PQk/hB/CD+GH8EMY0mpjZpiQpxA8XcefIrHOTDonvM0PYdUy9OPpSb596qF6nqYtV3383OtJ+CH8EH4IP4QfwpDWC9PDrTb8Vep25lPOSs45Egfr8XkrdB65Wdr+i5XW5D9++dbexXoSfgg/hB/CD+GHMKRluO5yk6lFswxWJjoxs5py8EqM/p60Wwldy3FMRZkiN0679jlPv56EH8IP4YfwQ/ghDGmlGz+qKcWydg/I76XRc+ToEZ+j2l2T90+mWsVAq89wOxRhLt3hHawn4YfwQ/gh/BB+CENaUakcK9s5sOc93pwxe2jA6+S2jPe1zDL9BkxGLqk2LBm8430Sfgg/hB/CD+GH8EP4IQxpIRmpqfihkPKUHojVLKtH4DLuPhuJhog8NjGrMj18cLORKPxarjh+5vUk/BB+CD+EH8IPYUg7hOEyZzmMrG6pH9+T92j5LLXwPDffl77iIwtP1UsYIfYL5OUd75PwQ/gh/BB+CD+EH8IPYUibu3+qqiS77FsNw0WMkuWYqhAfyXs4H+alDga549w444rjJ19Pwg/hh/BD+CH8EMZx/GGWlmQzUO35ya7L0aufRZPRQ5RGKT3P/mSGW6cFhftK/8G48vFzryfhh/BD+CH8EH4I77rKxsEFJbYf6UdjX7K8rx4tepWD5DDbO2t9/NKP39V6En4IP4Qfwg/hh/Cuq9yigN2bcjLjfq9H5zkSVUlepjBH0P/cFZo1mdIzes2RuIv1JPwQfgg/hB/CD+HH4/a43NrHI/z8453bP/sEidVhfLUK/7n+vdmMr0f5+fi++oqzrL7i7fV59Sl/aiz70cLD+vTjcbiO//G+25tvr22zKlaP8+X2z+Zdvl/Z+T4JP4Qfwg/hh/BD+CH8EGfIx8lpm7kv+R7Z9fZa1R1Wj9r9tXDHKpa1Oddt1F/ST2ueDnfpVc68noQfwg/hh/BD+CEMaZ065P7ghEU0539tVBtkv1CMpKgOKrmXWrY9szh/6Q7vYD0JP4Qfwg/hh/BDePcBvUw2V6W9k2lgTxWeDMF4asBrpJ66iY4G5tHEX2zLr3z87OtJ+CH8EH4IP4QfwpD2Se+dM5Wno53o9MnxQGV6xKdSycE6sejHw8Nl0ixedZVzryfhh/BD+CH8EH4IQ1q3OElZ92jZKSpCRnN+aBGzaWhYpmRpPEYGjZQ9q+zFMLFc6prPeTfrSfgh/BB+CD+EH8KQVporOWxJ5qDN91Iz76fNZ6SrSqmKhy9iz+onp5XYX835Qldd5fTrSfgh/BB+CD+EH8KQlkWOzMeL40kOuX8bRilzZ+fI1jPK5/SInNc2DVZOF4DivnL5q9zDehJ+CD+EH8IP4YcwpEUFvJbBMyp/0at/y9lsK32WUNTMcwJnGVORcfyT6eGxGn/5ZJ14PQk/hB/CD+GH8ENY18db36GMCDyNP6YUV2Kzc7tATvKZtz2rldbskBjTh1L1kha4Vxw/83oSfgg/hB/CD+GHMKSV2vWhXT6jMrX4XVPsqTBTVePhTl5rMpMhV3XRqlbmVxw/83oSfgg/hB/CD+GHMKT1ZDuagdLHcDt+GKf8VvUlY+syGjhLQp9axMzbs/I+NXWmQculHz/7ehJ+CD+EH8IP4YcwpOWWZNoQ9trIsBR/iXJ5VF2mfc6VlKXka2OLc5r32Q8cGonKd7nq4ydeT8IP4YfwQ/gh/BDW/Zz0oZpplBLzgFqVfxf1yUaZkPzlpIjI9A/V+P3cOh7oiuOnX0/CD+GH8EP4IfwQhrS9vD00gXWwTwxCZtqm7Kel4+wxmE+Vkypkic/YiPw+Pc6vusrZ15PwQ/gh/BB+CD+EIS23H3uePYrkqQZ/CfVJqrxril176+tQ5jIoKASJo4foU8Elfwgc75PwQ/gh/BB+CD+EH8IPYb7P+RZReZKWkHORS2I9hf+DXiUlLaWRKMYDjT3SqVJ+zZG4i/Uk/BB+CD+EH8IPYUgrUTlkg9GcX6a0tbTSmtp9yjifHvmzDyjqJWPi8tRhFHX07CO98vGTryfhh/BD+CH8EH4IQ1roS6o7VlrRFuPCh6ic1I6gqRloaMrLjuckRR/S8fQuT9usqz5+B+tJ+CH8EH4IP4QfwpBWmeywsoHzltYqh9kSpXLyRZRP7fnU5z+y/6lhP7/LVR8/8XoSfgg/hB/CD+GHMKQFw3Lw0AdU43jZxEx/wi4xn4vfhx7PLLOMGc1prVJMVq59zrOvJ+GH8EP4IfwQfghDWg+5aTh+CMiTS3gO8UkxSpRUpgbO7PTJPdKYQZG/FTGCqBR1HO+T8EP4IfwQfgg/hB/CD2Hcz0kwD+fJIL0zEvWwKM/BEZ2yfzkKKRul835UU6Zuoqs+fgfrSfgh/BB+CD+EH8KQViSCRXiyEirCl9Cw1DnLk4NKhOEqGJ+8VKbJQIf0PGeAXvn4udeT8EP4IfwQfgg/hO93+vk4HsZ4hxGffy3c3j6W/ejtx7K09vaxLN/3YsjHsj3sR1+X9QJPv5Zl+fOdZfnz19J/Dbajz718snzfT1t5Wt9SPrx+JyeEH8IP4YfwQ/gh/BB+CD8e+79Pbyz7nuY/C+31O0t7/Ws98POPtvDU+tHtr9s/D++8rkH69uNbW27t43Ek7/0MXr9/2+olbVxgO/qx/iTQeH3+l2UN6PsF9s99sb5Pwg/hh/BD+CH8EH4IP4QhrZSyV+pEiWnXcieK2vOMzZ08Yy6u5LnHzc5aPb/6gO5gPQk/hB/CD+GH8EMY0uaGy9Jqn5G1pXntMBKfInWvl1TvrGJbXmN2FsRzdEVp9Lz0KmdfT8IP4YfwQ/gh/BDe+5xkjI1xa/tb3oYxebTaTzM7h7zw6H+VCsTc9pymd9a2oPXZFcfPvp6EH8IP4YfwQ/ghDGlpcVImZubo5FFwacVkJay0Mqfu/UIxrXlSoZcJb3Ukxeg/OkodHe+T8EP4IfwQfgg/hB/CD2FIi1BaSt4ZrmfzWqLxZyi/U3xYp0L0p3NEz7HLOXiollmufPwO1tP1nX6P6z79Htd9+q/z8TLquGrKq7l4mf+WtfDwQCwOKtuVyzjlYb41GeSOAk5p/rzy8f+Ca43/Htd9+j2u+3Te+0Raq9S+nWzEz+kRb7EVWtoxY3hQJu/D6Xanp+fDhPyTm8vkmHXVVc6+noQfwg/hh/BD+CEMabNFVu5GpryQsDCsluJfOWFNPuVfF8Rj83R2sL3i+H2sJ+GH8EP4IfwQfghDWtQ3yoSemLic2pTWg3S1py0t+ZGKH4rp5WlUXTLxL6KVolxxvE/CD+GH8EP4IfwQfgg/hH8+Th0S0TcnqTqUIUjMDD6k49WKtmyARkU93VdSfHjM+a84fu71JPwQfgg/hB/CD+FdH3+Z1CelXrKTEXhn1F9izs9kgpW9QVMZvNRVhh15kZNf+fjZ15PwQ/gh/BB+CD+EIW0jBiGXA6U28lQ14MOaMMfdhwA9tke3YF6nvmWBveoTh9t55vdXPn7u9ST8EH4IP4Qfwg9hSIuQW4J0pOI5rpOcrlynBY2qeE5SzhE/aagSzUD9I4vEPHZVQ5V41cdPvJ6EH8IP4YfwQ/ghDGmdKFbnGM6jDuWhtnfWMsssNwkxSnT/7J80G2OVMc6xtXrF8dOvJ+GH8EP4IfwQfghDWgTfsiV57LVshykTU0NPlNVLLTwjeh3r+YV9SzqtXPn4Pawn4YfwQ/gh/BB+CEPawV9lZ7KTpQz7SePCbPfJhzBKSel4db8NS8RReqkVlquf8x7Wk/BD+CH8EH4IP4QhrZc2NqYZyDnafqPuUGYzUHobBrE9Wp1WqtZlZOb59Irj97KehB/CD+GH8EP4IQxpW0De/ur18WkCZxkN0bIHf+NTc34RrRS7lZgTtytSZvViuib234Vrn/Pc60n4IfwQfgg/hB/CkFaS7RjdU2rhc0H8ZT9aN0BLjh6bnUX/Ujr0y9NJ8JIN+1ccP/t6En4IP4Qfwg/hhzCk7UT+XOa1pS68RQkkdC2x45kaw8zWp3lAGcLno0OF3lPx/FzH+yT8EH4IP4Qfwg/hh/BDGNIif5565qfYzuwwvv+VfTupLAz5SijJyxl7t2cOGYqpFf3Kl+7wDtaT8EP4IfwQfgg/hCFtpg6+L22bRK0lZyX3t5RwXdTlKYKZZ3aGQW7dD82S/JWPn3w9CT+EH8IP4YfwQ1jvc5KWKVEGr/Xxt5i2Oc3YHGWR2pI/tYbWMc79I0vNPK58+WTdw3oSfgg/hB/CD+GHMKSlUKTIAUdSXjxqbzm0LXQt4ZFSjpYCybA/nDLukLl8lqdf+fjp15PwQ/gh/BB+CD+EIS12GVMdOFVY0mucaTuzpNi1Pj6F62jb3M8NZfrY3Sxzgy7/8btYT8IP4YfwQ/gh/BD+36mtafKyPGfN42Ph9uNxyE1+LMuyPD80Xv98h9fl2xqNfy11rtt6ge8/H1m+7wF+vUDY2P79569lC/XL9/UAP9crb2F9/Yyvv5MDwg/hh/BD+CH8EH4IP4R/Pt5y9k/MeGiRXU+zOA+6w5g8EYMojtue4VNevbiyqHPpDu9gPQk/9L/+Al9wfaff47pP/8/6eKpU5hlB9PJJ9uDXeslo7ZmEi5+exvXSbmUI1csU5ks//ptca/z3uO7T73HdpzvyV9nJWRBTUZuuM//CFGXSmVerw5WUk+fYuHhaLM+vfs6zryfhh/BD+CH8EH4IP5bJ4sqCV8f7JPwQfgg/hB/CD+GH8EP4IfwQfgg/hB/CD+GH8EP4IfwQfgg/hB/CD+GH8EP4IfwQfgg/hB/CD+GH8EP4IfwQfgg/hB/CD/2vv8AX/B+OKurQ9Kr7RgAAAABJRU5ErkJggg==' alt='QR Code for Google Maps'><p>Scan for directions</p></div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th class="text-center">Unit #</th>
+                    <th class="text-center">Trees<br>Expected</th>
+                    <th>Phone</th>
+                    <th class="text-center">Home?<br>(Y/N)</th>
+                    <th>Gate<br>Code</th>
+                    <th>Comments</th>
+                    <th class="text-center">Trees<br>Picked Up</th>
+                    <th class="text-center">Amount<br>Collected</th>
+                    <th class="text-center">Cash/<br>Check</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>Ansley Fry</td>
+                <td>310, STEER ACRES CT, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>6785223699</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Audra Roach</td>
+                <td>305, Kati Ln, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>512-466-2957</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>** Payment located under the door mat ** </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Chihju Ning</td>
+                <td>4023, Wilderness Path Bnd, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>4696496621</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>I'll tape the envelope with $10 to the door</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Eileen Saidi</td>
+                <td>3902, Simon Ridge Ct, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>7372180448</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Elliott Fry</td>
+                <td>310, Steer Acres Ct, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>7174488171</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Jack McAfee</td>
+                <td>311, South Frontier Lane, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>7133057461</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>I will likely leave payment under the front porch mat.</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Jade Schmidt</td>
+                <td>3902, Black Gold Bend, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>4077393252</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>Envelope attached to tree</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Jami Hafiz</td>
+                <td>4219, Arrow Wood Rd, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>6128044180</td>
+                <td class="text-center">Yes</td>
+                <td>5269</td>
+                <td>Will attach check in an envelope on the tree</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Jenna Lawyer</td>
+                <td>4016, Bison Bnd, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>8186973690</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Jennifer Meyer</td>
+                <td>319, Angus, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5127973566</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Johe De Freitas</td>
+                <td>4027, Anderson Bluff Dr, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>2153856627</td>
+                <td class="text-center">Yes</td>
+                <td>6634</td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Jonathan Pomroy</td>
+                <td>4107, Charbray Ct, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>512-750-3595</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Justin Vickers</td>
+                <td>4202, TIGER HORSE TRL, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5125959439</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Kori Ozols</td>
+                <td>303, South Frontier, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5126942094</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Lynn</td>
+                <td>3814, AVERY WOODS LANE, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>214.417.8498</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>Tree is in the backyard, immediately after opening the gate. Payment is under front door mat.</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Matt Morris</td>
+                <td>3805, Katie Ln, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5126334071</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Nick Geron</td>
+                <td>4316, Remington Rd, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5128798207</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Stacia McCloud</td>
+                <td>102, Dasher Drive, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5129710805</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Payment under front door mat</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Todd Moseley</td>
+                <td>4031, Logan Ridge Dr, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5126273180</td>
+                <td class="text-center">Yes</td>
+                <td>3180</td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Yichun Chen</td>
+                <td>212, Walsh Hill Trl, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5129135994</td>
+                <td class="text-center">No</td>
+                <td>#0600</td>
+                <td>payment with the tree</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route T - Pickup Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3498DB;
+        }
+        .header-left {
+            flex: 1;
+        }
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: #ECF0F1;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .summary-item strong {
+            display: block;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+        .maps-section {
+            background: #E8F5E9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .maps-section a {
+            color: #2E7D32;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .maps-section a:hover {
+            text-decoration: underline;
+        }
+        .qr-section {
+            text-align: center;
+            padding: 10px;
+        }
+        .qr-section img {
+            width: 180px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .qr-section p {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: #3498DB;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #2980B9;
+        }
+        td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        tr:nth-child(even) {
+            background: #ECF0F1;
+        }
+        tr:hover {
+            background: #D5DBDB;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .editable {
+            background: #FFF9C4 !important;
+            min-width: 80px;
+        }
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .maps-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Route T - Pickup Sheet</h1>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <strong>Total Pickups</strong>
+                        <span>2</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Total Trees</strong>
+                        <span>2</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Driver</strong>
+                        <span>_______________</span>
+                    </div>
+                </div>
+                
+                <div class='maps-section'><strong>🗺️ Google Maps Directions:</strong><br><a href='https://www.google.com/maps/dir/8318%2C%20Campeche%20bay%20pl%2C%20Round%20Rock%2C%20Austin%2C%20TX/4031%2C%20Barlow%20Drive%2C%20Austin%2C%20TX' target='_blank'>Open Route in Google Maps →</a></div>
+            </div>
+            
+            <div class='qr-section'><img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAhIAAAISAQAAAACxRhsSAAAFcUlEQVR4nO1dW27rOAylFAPz6QBdQJfi7GCWVHRJdwfxUrqAAezPAg444EOylWlR3OsYUDTnfCiOHRM2SfAlSglMezHG3SSIQKME+FEC/CgBfpQAP0qAHyXAjxLgRwnwo2Z+BEdH4WJfO6IxhJAGuTDLL86UjgSXCt9lH+LO+wWg8Xh+dPYxXGWcX4hpflk0twrDdKYw8K2TITARUyC6dUzzadG7wuOeI4JGAfDja37MyTqOZjE74mvPzO/nU64I3FwvKZvcksYeRNAoAH78xI/+M6iyqu7S8CEaO4tO6iAqevmRxu8DNEqAHz/y48R87cWx98whnG8hhFfz86Rq+x+ApyXAj8fzg1hAg35MJxvWr3qkGstXUWBef5dvu0IuJcCPw/gxavp+zk599szfvL1Y0fA2eeAaLiQ2VgoBD3+OXYj7bleARp386HTcTp727uOZSJ3/IrnVyQJX9iOu8l0iaLTu90nUcRB/Lu5dHf03gSv8/tPINrZHY9D8qF9S+Um9/aSXNGYl4mu6oH5fqwF8rfFddiHuu10BGof5/fF16XgM4u37yer34uNTOb9fOpKKv98kfn/8e+mCTQ9ALiXAj6P8PmsharDjxUr8flWMqiX9Kd9Xu7sm/cj37wE9PUxPWWtQkxaiXAnV77vGimJ6TVVNrM5RpfoV6lJ3gJ4eZ08pax15nd+GFWZy1bzaAHv6DaCnx+opUbKi7u1XA+raaYZ28xX29AtATw/r63vjz8Asw7sW+y0+dZ1M2pm+qqG13z34OfYh7rxfABrV51GsqdEakKpRVQz5wmpFJd9CfFq1bGOLNE4cLtIqJfVTU9HxNSX979qHIu1T4/lkvSnaO33Ec+xA3HOzAzTq5EeXDm5SP7X4NE1FzYFo+PWyBOuI7v/pZJDDE4eB0SdduWxjezSGKdnTMXekvGlUmpJ+Gj7+Yu1ETTNT6EN5Dtk2mO8LNAy1cxl2zlsA7JRPCqB+Wq9sY5v9p/TtYG0pqQnVL6B+WrtsY3s0Rlto0uUjceo2eP+penttQvUVKP2CutRTyLatuhTf20677EZVg9RU9vfp/uT8MW9aqWxji/2nnFUvzeBvY9GknX7VzyE+rVq2sdX1UZwr+WvwmftPreyfi/3rcinY00plGxvU0ynPkSb41H7OnrxpKscH0NPaZRtb7Osjj0C3fX3e5reWqaw71X6X16XCnlYq29hofDpYw2nSU19ysm34My1emwAV0NNKZRtbrfP32U7aVNS2BrBaUZ8AWOcDanmXCBrN8oOyWcxN/dnGrnNUmxUoRV8V9LRm2cY266eKVD/dLj7ZrjHRb1gf9RSyjW3SCLLZia2L1g1QpC1F9+vTBurNWmnpSLH90g55jj8GaDTPj2HyNlPOHSnJdn5K/5QopsybSgM/X+XcZdZzD36OXYj7bleARp38IHP36vKHtD7PrmyWn+b5qHxhs5IaeVSlso0t5vuUp0wFad1JUmBP/zdb+imgpzXLNrY4b7psNuqxC3f9p7a/VD6F+f3qZRtbrUtx2QeV66duT322KtVU0YdSuWxjQzRoo51kFjP7+E0Dv1/w+GANAxCfVizb2B6NQTVuykGqbsuX2qGtBmVRQd68Z/jA+qjnkG0TNOibVJ/ShlKb3xXro+D3q5dtbFlPhyI0LXY/89xqM8Dv1yzb2DANfpdNJGxPibwDv2nxuu80M4eL7kxx2HP8CUCjXX50/qlb7s/yL3y2s7QGo7dOt50INL9wGM+ygW8vW0z8Ohd/e1bLu0TQ+N/k+7TZ63TN8vu7DXy92A+/X7VsY0M0whf/F/GbGGt5lwgaBcCPEuBHCfCjBPhRAvwoAX6UAD9KgB8lHpFH/Qs2F9Axb/gFeQAAAABJRU5ErkJggg==' alt='QR Code for Google Maps'><p>Scan for directions</p></div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th class="text-center">Unit #</th>
+                    <th class="text-center">Trees<br>Expected</th>
+                    <th>Phone</th>
+                    <th class="text-center">Home?<br>(Y/N)</th>
+                    <th>Gate<br>Code</th>
+                    <th>Comments</th>
+                    <th class="text-center">Trees<br>Picked Up</th>
+                    <th class="text-center">Amount<br>Collected</th>
+                    <th class="text-center">Cash/<br>Check</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>Joe</td>
+                <td>8318, Campeche bay pl, Round Rock, Austin, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>2147739656</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Tree will be placed at curb, payment will be left in envelope on tree if not home.</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Willie Inniss</td>
+                <td>4031, Barlow Drive, Austin, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5128615619</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Front Yard</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

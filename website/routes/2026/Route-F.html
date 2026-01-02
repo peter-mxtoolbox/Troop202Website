@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route F - Pickup Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3498DB;
+        }
+        .header-left {
+            flex: 1;
+        }
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: #ECF0F1;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .summary-item strong {
+            display: block;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+        .maps-section {
+            background: #E8F5E9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .maps-section a {
+            color: #2E7D32;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .maps-section a:hover {
+            text-decoration: underline;
+        }
+        .qr-section {
+            text-align: center;
+            padding: 10px;
+        }
+        .qr-section img {
+            width: 180px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .qr-section p {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: #3498DB;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #2980B9;
+        }
+        td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        tr:nth-child(even) {
+            background: #ECF0F1;
+        }
+        tr:hover {
+            background: #D5DBDB;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .editable {
+            background: #FFF9C4 !important;
+            min-width: 80px;
+        }
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .maps-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Route F - Pickup Sheet</h1>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <strong>Total Pickups</strong>
+                        <span>4</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Total Trees</strong>
+                        <span>4</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Driver</strong>
+                        <span>_______________</span>
+                    </div>
+                </div>
+                
+                <div class='maps-section'><strong>🗺️ Google Maps Directions:</strong><br><a href='https://www.google.com/maps/dir/2604%2C%20Lou%20Hollow%20Pl%2C%20Cedar%20Park%2C%20TX/15205%2C%20Interlachen%20Drive%2C%20Austin%2C%20TX/11308%2C%20Fletcher%20Hall%20Ln%2C%20Austin%2C%20TX/11400%2C%20W%20Parmer%20Ln%2C%20Cedar%20Park%2C%20TX' target='_blank'>Open Route in Google Maps →</a></div>
+            </div>
+            
+            <div class='qr-section'><img src='data:image/png;base64,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' alt='QR Code for Google Maps'><p>Scan for directions</p></div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th class="text-center">Unit #</th>
+                    <th class="text-center">Trees<br>Expected</th>
+                    <th>Phone</th>
+                    <th class="text-center">Home?<br>(Y/N)</th>
+                    <th>Gate<br>Code</th>
+                    <th>Comments</th>
+                    <th class="text-center">Trees<br>Picked Up</th>
+                    <th class="text-center">Amount<br>Collected</th>
+                    <th class="text-center">Cash/<br>Check</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>Alexander Scott-Zhukov</td>
+                <td>2604, Lou Hollow Pl, Cedar Park, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>3472037419</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Curbside</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Bethany Sisneroz</td>
+                <td>15205, Interlachen Drive, Austin, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>7134192629</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Claire Jimenez</td>
+                <td>11308, Fletcher Hall Ln, Austin, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5124233102</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>Tree and payment on curb</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Vanessa Clark</td>
+                <td>11400, W Parmer Ln, Cedar Park, TX</td>
+                <td class="text-center">74</td>
+                <td class="text-center">1</td>
+                <td>512-660-8407</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>Under backdoor mat (inside iron gate / garage side)</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
