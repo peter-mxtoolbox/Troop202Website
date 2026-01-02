@@ -10,6 +10,7 @@ from pathlib import Path
 import pandas as pd
 import folium
 from typing import Optional
+import re
 
 
 def load_optimized_routes(csv_path: str = 'data/2026-optimized-routes.csv') -> pd.DataFrame:
@@ -33,7 +34,7 @@ def load_optimized_routes(csv_path: str = 'data/2026-optimized-routes.csv') -> p
     return df_valid
 
 
-def create_route_map(df: pd.DataFrame, output_path: str = 'data/2026-routes-map.html'):
+def create_route_map(df: pd.DataFrame, output_path: str = '../website/routes/2026/2026-routes-map.html'):
     """
     Create an interactive Folium map with all routes.
     
@@ -42,6 +43,9 @@ def create_route_map(df: pd.DataFrame, output_path: str = 'data/2026-routes-map.
         output_path: Path to save the HTML map file
     """
     print("\nCreating route map...")
+    
+    # Ensure output directory exists
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     
     # Calculate map center (average of all coordinates)
     center_lat = df['latitude'].mean()
@@ -146,9 +150,12 @@ def create_route_map(df: pd.DataFrame, output_path: str = 'data/2026-routes-map.
     
     # Save the map
     route_map.save(output_path)
+    
+    # Post-process the HTML to use local resources
+    print("  Converting to use local resources...")
+    convert_to_local_resources(output_path)
+    
     print(f"\n✓ Map saved to: {output_path}")
-    print(f"\n  To open the map, run:")
-    print(f"  open {output_path}")
     
     # Print route summary
     print("\n" + "="*60)
@@ -159,6 +166,40 @@ def create_route_map(df: pd.DataFrame, output_path: str = 'data/2026-routes-map.
         trees = route_df['Number of Trees'].sum()
         color = route_groups[route]['color']
         print(f"Route {route} ({color}): {len(route_df)} pickups, {int(trees)} trees")
+
+
+def convert_to_local_resources(html_path: str):
+    """Convert HTML to use local CSS/JS resources instead of CDN."""
+    with open(html_path, 'r', encoding='utf-8') as f:
+        html = f.read()
+    
+    # Replace CDN links with local paths (using ../ since files are in year subfolders)
+    replacements = {
+        'https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js': '../lib/js/leaflet.js',
+        'https://code.jquery.com/jquery-3.7.1.min.js': '../lib/js/jquery.min.js',
+        'https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js': '../lib/js/bootstrap.bundle.min.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js': '../lib/js/leaflet.awesome-markers.js',
+        'https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css': '../lib/css/leaflet.css',
+        'https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css': '../lib/css/bootstrap.min.css',
+        'https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css': '',  # Remove, not needed
+        'https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css': '../lib/css/fontawesome.min.css',
+        'https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css': '../lib/css/leaflet.awesome-markers.css',
+        'https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css': '',  # Remove, not critical
+    }
+    
+    for cdn_url, local_path in replacements.items():
+        if local_path:
+            # For script tags
+            html = html.replace(f'<script src="{cdn_url}">', f'<script src="{local_path}">')
+            # For link tags
+            html = html.replace(f'<link rel="stylesheet" href="{cdn_url}"/>', f'<link rel="stylesheet" href="{local_path}"/>')
+        else:
+            # Remove the line entirely
+            html = re.sub(f'.*{re.escape(cdn_url)}.*\n', '', html)
+    
+    # Write back
+    with open(html_path, 'w', encoding='utf-8') as f:
+        f.write(html)
 
 
 def main():
@@ -176,7 +217,7 @@ def main():
             input_path = 'data/2025-clustered-routes.csv'
         else:
             input_path = 'data/2025-optimized-routes.csv'
-        output_path = 'data/2025-routes-map.html'
+        output_path = '../website/routes/2025/2025-routes-map.html'
         print("\n🧪 TEST MODE: Using 2025 dataset")
     else:
         # Try clustered first, fall back to optimized
@@ -184,7 +225,7 @@ def main():
             input_path = 'data/2026-clustered-routes.csv'
         else:
             input_path = 'data/2026-optimized-routes.csv'
-        output_path = 'data/2026-routes-map.html'
+        output_path = '../website/routes/2026/2026-routes-map.html'
     
     # Load routes
     df = load_optimized_routes(input_path)
