@@ -235,10 +235,15 @@ def create_route_pdf(route_df: pd.DataFrame, route_name: str, output_path: str, 
     print(f"  ✓ PDF created: {output_path}")
 
 
-def export_route(route_name: str, csv_path: str, output_dir: str = 'data/route-exports'):
+def export_route(route_name: str, csv_path: str, output_dir: str = None):
     """Export a single route with maps URL and PDF."""
     # Load data
     df = load_routes(csv_path)
+    
+    # Determine output directory based on year if not specified
+    if output_dir is None:
+        year = '2026' if '2026' in csv_path else '2025'
+        output_dir = f'../website/routes/{year}'
     
     # Get route data
     route_df = df[df['optimized_route'] == route_name].copy()
@@ -251,7 +256,7 @@ def export_route(route_name: str, csv_path: str, output_dir: str = 'data/route-e
     
     # Create output directory
     output_path = Path(output_dir)
-    output_path.mkdir(exist_ok=True)
+    output_path.mkdir(parents=True, exist_ok=True)
     
     print(f"\n{'='*60}")
     print(f"EXPORTING ROUTE {route_name}")
