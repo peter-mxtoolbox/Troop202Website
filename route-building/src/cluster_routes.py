@@ -15,7 +15,7 @@ from typing import Optional
 import time
 
 
-def load_geocoded_data(csv_path: str = 'data/2025-geocoded-full.csv') -> pd.DataFrame:
+def load_geocoded_data(csv_path: str = 'data/2026-geocoded-full.csv') -> pd.DataFrame:
     """Load geocoded data."""
     file_path = Path(csv_path)
     if not file_path.exists():
@@ -191,9 +191,9 @@ def main():
     
     # Save results
     if test_mode:
-        output_path = 'data/2025-test-clustered-routes.csv'
-    else:
         output_path = 'data/2025-clustered-routes.csv'
+    else:
+        output_path = 'data/2026-clustered-routes.csv'
     
     best_df.to_csv(output_path, index=False)
     print(f"\n✓ Routes saved to: {output_path}")

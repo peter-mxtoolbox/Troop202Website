@@ -14,7 +14,7 @@ import pandas as pd
 from typing import Optional
 
 
-def load_routes(csv_path: str = 'data/2025-clustered-routes.csv') -> pd.DataFrame:
+def load_routes(csv_path: str = 'data/2026-clustered-routes.csv') -> pd.DataFrame:
     """Load route assignments."""
     file_path = Path(csv_path)
     if not file_path.exists():
@@ -346,10 +346,10 @@ def main():
     test_mode = '--test' in sys.argv
     
     if test_mode:
-        csv_path = 'data/2025-test-clustered-routes.csv'
-        print("\n🧪 TEST MODE: Using test data")
-    else:
         csv_path = 'data/2025-clustered-routes.csv'
+        print("\n🧪 TEST MODE: Using 2025 dataset")
+    else:
+        csv_path = 'data/2026-clustered-routes.csv'
     
     # Load routes
     df = load_routes(csv_path)

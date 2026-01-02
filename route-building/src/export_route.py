@@ -22,7 +22,7 @@ import qrcode.constants
 from io import BytesIO
 
 
-def load_routes(csv_path: str = 'data/2025-clustered-routes.csv') -> pd.DataFrame:
+def load_routes(csv_path: str = 'data/2026-clustered-routes.csv') -> pd.DataFrame:
     """Load route assignments."""
     file_path = Path(csv_path)
     if not file_path.exists():
@@ -278,26 +278,51 @@ def export_route(route_name: str, csv_path: str, output_dir: str = 'data/route-e
 
 def main():
     """Main execution."""
-    # Check for test mode
+    # Check for test mode and all flag
     test_mode = '--test' in sys.argv
+    export_all = '--all' in sys.argv
     
     if test_mode:
-        csv_path = 'data/2025-test-clustered-routes.csv'
-        print("\n🧪 TEST MODE: Using test data")
-    else:
         csv_path = 'data/2025-clustered-routes.csv'
+        print("\n🧪 TEST MODE: Using 2025 dataset")
+    else:
+        csv_path = 'data/2026-clustered-routes.csv'
+    
+    # Handle --all flag to export all routes
+    if export_all:
+        print("="*60)
+        print("EXPORTING ALL ROUTES")
+        print("="*60)
+        
+        df = load_routes(csv_path)
+        routes = sorted(df['optimized_route'].unique())
+        
+        print(f"\nFound {len(routes)} routes to export: {', '.join(routes)}")
+        print("\nExporting...")
+        
+        for route_name in routes:
+            export_route(route_name, csv_path)
+        
+        print(f"\n{'='*60}")
+        print(f"✓ ALL ROUTES EXPORTED SUCCESSFULLY!")
+        print(f"{'='*60}")
+        print(f"\nFiles saved in: data/route-exports/")
+        sys.exit(0)
     
     # Get route name from command line
-    if len(sys.argv) < 2 or sys.argv[1] == '--test':
+    if len(sys.argv) < 2 or sys.argv[1] in ['--test', '--all']:
         print("="*60)
         print("ROUTE EXPORT TOOL")
         print("="*60)
         print("\nUsage:")
         print("  uv run src/export_route.py <ROUTE_NAME>")
         print("  uv run src/export_route.py <ROUTE_NAME> --test")
+        print("  uv run src/export_route.py --all")
+        print("  uv run src/export_route.py --all --test")
         print("\nExample:")
         print("  uv run src/export_route.py A")
         print("  uv run src/export_route.py AA")
+        print("  uv run src/export_route.py --all  # Export all routes")
         print("\n")
         
         # Show available routes

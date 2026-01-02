@@ -86,7 +86,7 @@ def geocode_address(
     
     # Not in cache, call Google API
     try:
-        result = gmaps_client.geocode(address)
+        result = gmaps_client.geocode(address)  # type: ignore[attr-defined]
         if result and len(result) > 0:
             location = result[0]['geometry']['location']
             lat = location['lat']
@@ -106,7 +106,7 @@ def geocode_address(
 
 def geocode_dataframe(
     df: pd.DataFrame,
-    address_components: list = None,
+    address_components: Optional[list] = None,
     limit: Optional[int] = None
 ) -> pd.DataFrame:
     """
@@ -136,15 +136,19 @@ def geocode_dataframe(
     df = df.copy()
     
     # Build address from components
-    df['full_address'] = ''
-    for i, col in enumerate(address_components):
+    address_parts = []
+    for col in address_components:
         if col in df.columns:
-            if i > 0:
-                df['full_address'] += ', '
-            df['full_address'] += df[col].astype(str)
+            address_parts.append(df[col].astype(str))
+    
+    # Join components with comma separator using pandas str.cat()
+    if address_parts:
+        df['full_address'] = address_parts[0].str.cat(address_parts[1:], sep=', ')
+    else:
+        df['full_address'] = ''
     
     # Add state (assuming Texas)
-    df['full_address'] = df['full_address'] + ', TX'
+    df['full_address'] = df['full_address'].str.cat(others=[', TX'] * len(df))
     
     # Limit for testing if specified
     if limit:
@@ -160,7 +164,7 @@ def geocode_dataframe(
         longitudes = []
         api_calls = 0
         
-        for idx, row in df_to_geocode.iterrows():
+        for count, (idx, row) in enumerate(df_to_geocode.iterrows(), 1):
             address = row['full_address']
             
             # Check if already in cache before making API call
@@ -178,11 +182,11 @@ def geocode_dataframe(
                 else:
                     status = "💾 Cache"
                 
-                print(f"  [{idx+1}/{len(df_to_geocode)}] {status} ✓ {row['Name']}: {address}")
+                print(f"  [{count}/{len(df_to_geocode)}] {status} ✓ {row['Name']}: {address}")
             else:
                 latitudes.append(None)
                 longitudes.append(None)
-                print(f"  [{idx+1}/{len(df_to_geocode)}] ✗ Failed: {address}")
+                print(f"  [{count}/{len(df_to_geocode)}] ✗ Failed: {address}")
         
         df_to_geocode['latitude'] = latitudes
         df_to_geocode['longitude'] = longitudes
@@ -199,13 +203,23 @@ def geocode_dataframe(
 
 
 def main():
-    """Main execution - geocode 2025 data."""
+    """Main execution - geocode addresses with test/live mode support."""
     print("="*60)
     print("Google Maps Geocoding with Persistent Cache")
     print("="*60)
     
-    # Load data
-    csv_path = 'data/2025-tree_requests.csv'
+    # Parse arguments
+    test_mode = '--test' in sys.argv
+    
+    # Set paths based on mode
+    if test_mode:
+        csv_path = 'data/2025-tree_requests.csv'
+        output_path = 'data/2025-geocoded-full.csv'
+        print("\n🧪 TEST MODE: Using 2025 dataset")
+    else:
+        csv_path = 'data/2026-tree_requests.csv'
+        output_path = 'data/2026-geocoded-full.csv'
+    
     print(f"\nLoading data from {csv_path}...")
     
     if not Path(csv_path).exists():
@@ -221,7 +235,6 @@ def main():
     print("Note: First run will make API calls, subsequent runs use cache!")
     
     df_geocoded = geocode_dataframe(df)
-    output_path = 'data/2025-geocoded-full.csv'
     
     # Save results
     df_geocoded.to_csv(output_path, index=False)

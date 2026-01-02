@@ -47,7 +47,8 @@
 - `geocode_google.py` - Geocode addresses with caching
 - `cluster_routes.py` - Generate routes using geographic clustering
 - `generate_map.py` - Create interactive HTML maps
-- `compare_strategies.py` - Compare optimization results (not currently used)
+- `export_route.py` - Export individual routes for drivers
+
 
 ### Data Files (in `data/`)
 - `2025-tree_requests.csv` - Raw form data
