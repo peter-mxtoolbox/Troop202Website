@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Foundation infrastructure - S3, KMS, WAF, OAC for Troop 202 website'
+Description: 'Foundation infrastructure - S3, KMS, OAC for Troop 202 website'
 
 Parameters:
   Environment:
@@ -119,65 +119,6 @@ Resources:
       AliasName: !Sub 'alias/${Environment}-troop202-logs'
       TargetKeyId: !Ref LogGroupKMSKey
 
-  # WAF Web ACL for security
-  WebACL:
-    Type: AWS::WAFv2::WebACL
-    Properties:
-      Name: !Sub '${Environment}-troop202-waf'
-      Description: 'WAF rules for Troop 202 website'
-      Scope: CLOUDFRONT
-      DefaultAction:
-        Allow: {}
-      Rules:
-        - Name: AWSManagedRulesCommonRuleSet
-          Priority: 1
-          OverrideAction:
-            None: {}
-          Statement:
-            ManagedRuleGroupStatement:
-              VendorName: AWS
-              Name: AWSManagedRulesCommonRuleSet
-              ExcludedRules: []
-          VisibilityConfig:
-            SampledRequestsEnabled: true
-            CloudWatchMetricsEnabled: true
-            MetricName: CommonRuleSetMetric
-        - Name: AWSManagedRulesKnownBadInputsRuleSet
-          Priority: 2
-          OverrideAction:
-            None: {}
-          Statement:
-            ManagedRuleGroupStatement:
-              VendorName: AWS
-              Name: AWSManagedRulesKnownBadInputsRuleSet
-          VisibilityConfig:
-            SampledRequestsEnabled: true
-            CloudWatchMetricsEnabled: true
-            MetricName: KnownBadInputsRuleSetMetric
-        - Name: RateLimitRule
-          Priority: 3
-          Action:
-            Block: {}
-          Statement:
-            RateBasedStatement:
-              Limit: 2000
-              AggregateKeyType: IP
-          VisibilityConfig:
-            SampledRequestsEnabled: true
-            CloudWatchMetricsEnabled: true
-            MetricName: RateLimitRule
-      VisibilityConfig:
-        SampledRequestsEnabled: true
-        CloudWatchMetricsEnabled: true
-        MetricName: !Sub '${Environment}Troop202WebACL'
-      Tags:
-        - Key: Name
-          Value: !Sub '${Environment}-troop202-waf'
-        - Key: Environment
-          Value: !Ref Environment
-        - Key: ManagedBy
-          Value: 'CloudFormation'
-
 Outputs:
   WebsiteBucketName:
     Description: 'Name of the S3 bucket hosting the website'
@@ -214,12 +155,6 @@ Outputs:
     Value: !Ref OriginAccessControl
     Export:
       Name: !Sub '${AWS::StackName}-OriginAccessControlId'
-  
-  WebACLArn:
-    Description: 'WAF Web ACL ARN'
-    Value: !GetAtt WebACL.Arn
-    Export:
-      Name: !Sub '${AWS::StackName}-WebACLArn'
   
   LogGroupKMSKeyArn:
     Description: 'KMS Key ARN for log encryption'
