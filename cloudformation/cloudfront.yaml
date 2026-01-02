@@ -134,8 +134,6 @@ Resources:
             Fn::ImportValue: !Sub '${FoundationStackName}-CloudFrontLogsBucketDomainName'
           IncludeCookies: false
           Prefix: 'cloudfront-logs/'
-        WebACLId:
-          Fn::ImportValue: !Sub '${FoundationStackName}-WebACLArn'
       Tags:
         - Key: Name
           Value: !Sub '${Environment}-troop202-cloudfront'
