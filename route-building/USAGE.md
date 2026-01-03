@@ -20,19 +20,26 @@
    uv run src/generate_map.py
    ```
 
-5. Open map:
+5. Sync to S3 and view:
    ```bash
-   open data/2025-routes-map.html
+   cd ../website && AWS_PROFILE=730335414034_AdministratorAccess aws s3 sync routes/ s3://prod-troop202-website-730335414034/routes/ --delete
    ```
+   
+   Then open: https://troop202.org/routes/2026/2026-routes-map.html
 
 6. Adjust routes (optional):
    ```bash
    uv run src/adjust_routes.py
    ```
 
-7. Export route for driver:
+7. Export all routes for drivers:
    ```bash
-   uv run src/export_route.py A
+   uv run src/export_route.py --all
+   ```
+
+8. Sync routes to S3:
+   ```bash
+   cd ../website && AWS_PROFILE=730335414034_AdministratorAccess aws s3 sync routes/2026/ s3://prod-troop202-website-730335414034/routes/2026/
    ```
 
 ---
@@ -49,10 +56,12 @@
    uv run src/generate_map.py --test
    ```
 
-3. Open map:
+3. Sync to S3 and view:
    ```bash
-   open data/2025-test-routes-map.html
+   cd ../website && AWS_PROFILE=730335414034_AdministratorAccess aws s3 sync routes/ s3://prod-troop202-website-730335414034/routes/
    ```
+   
+   Then open: https://troop202.org/routes/2025/2025-routes-map.html
 
 ---
 
@@ -78,9 +87,22 @@ uv run src/export_route.py <ROUTE_LETTER>
 Example:
 ```bash
 uv run src/export_route.py A
+**Export all routes:**
+```bash
+uv run src/export_route.py --all
 ```
 
-Creates PDF with:
+Creates HTML files with:
 - QR code for Google Maps navigation
+- Link to Google Maps
+- Table with all addresses and tracking fields
+- Located in: `../website/routes/2026/Route-<LETTER>.html`
+
+**Sync to S3:**
+```bash
+cd ../website && AWS_PROFILE=730335414034_AdministratorAccess aws s3 sync routes/2026/ s3://prod-troop202-website-730335414034/routes/2026/
+```
+
+Then routes are accessible at: https://troop202.org/routes/2026/Route-A.html (replace A with any route letter)
 - Table with all addresses and tracking fields
 - Located in: `data/route-exports/Route-A-PickupSheet.pdf`
