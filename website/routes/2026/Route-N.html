@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route N - Pickup Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3498DB;
+        }
+        .header-left {
+            flex: 1;
+        }
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: #ECF0F1;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .summary-item strong {
+            display: block;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+        .maps-section {
+            background: #E8F5E9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .maps-section a {
+            color: #2E7D32;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .maps-section a:hover {
+            text-decoration: underline;
+        }
+        .qr-section {
+            text-align: center;
+            padding: 10px;
+        }
+        .qr-section img {
+            width: 180px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .qr-section p {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: #3498DB;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #2980B9;
+        }
+        td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        tr:nth-child(even) {
+            background: #ECF0F1;
+        }
+        tr:hover {
+            background: #D5DBDB;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .editable {
+            background: #FFF9C4 !important;
+            min-width: 80px;
+        }
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .maps-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Route N - Pickup Sheet</h1>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <strong>Total Pickups</strong>
+                        <span>6</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Total Trees</strong>
+                        <span>6</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Driver</strong>
+                        <span>_______________</span>
+                    </div>
+                </div>
+                
+                <div class='maps-section'><strong>🗺️ Google Maps Directions:</strong><br><a href='https://www.google.com/maps/dir/120%2C%20Inks%20Lake%20Drive%20%2C%20Georgetown%2C%20TX/128%2C%20Lockhart%20Loop%2C%20Leander%2C%20TX/4228%2C%20Trinity%20Woods%20St%2C%20Leander%2C%20TX/4225%2C%20Trinity%20Woods%20St%2C%20Leander%2C%20TX/2220%2C%20Valley%20Oaks%20cove%2C%20Leander%2C%20TX/348%2C%20Lake%20Livingston%20Dr%2C%20Georgetown%2C%20TX' target='_blank'>Open Route in Google Maps →</a></div>
+            </div>
+            
+            <div class='qr-section'><img src='data:image/png;base64,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' alt='QR Code for Google Maps'><p>Scan for directions</p></div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th class="text-center">Unit #</th>
+                    <th class="text-center">Trees<br>Expected</th>
+                    <th>Phone</th>
+                    <th class="text-center">Home?<br>(Y/N)</th>
+                    <th>Gate<br>Code</th>
+                    <th>Comments</th>
+                    <th class="text-center">Trees<br>Picked Up</th>
+                    <th class="text-center">Amount<br>Collected</th>
+                    <th class="text-center">Cash/<br>Check</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>Lorri Boyd </td>
+                <td>120, Inks Lake Drive , Georgetown, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5126537051</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>Address is 120 Inks Lake Drive Georgetown 78628</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Haleigh Van Horn</td>
+                <td>128, Lockhart Loop, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>9795716523</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Under the front door mat</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Jennifer Lawrence</td>
+                <td>4228, Trinity Woods St, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5123485153</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>In front of garage - right side</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Twila KerleganLucero</td>
+                <td>4225, Trinity Woods St, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>6508269887</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>Payment placed under front door mat; tree at curbside</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Moira Pyle</td>
+                <td>2220, Valley Oaks cove, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>512-786-2628</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>Tree in front of gate to right of garage. Money under mat</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Jill Guillot</td>
+                <td>348, Lake Livingston Dr, Georgetown, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>9563690101</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>Tree is located to the right of the driveway. My address is Georgetown but that is not an option. According to the map, I am also the south side for pickup. Sorry for the confusion!! jillard718@aol.com</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

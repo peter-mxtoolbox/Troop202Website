@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route A - Pickup Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3498DB;
+        }
+        .header-left {
+            flex: 1;
+        }
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: #ECF0F1;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .summary-item strong {
+            display: block;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+        .maps-section {
+            background: #E8F5E9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .maps-section a {
+            color: #2E7D32;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .maps-section a:hover {
+            text-decoration: underline;
+        }
+        .qr-section {
+            text-align: center;
+            padding: 10px;
+        }
+        .qr-section img {
+            width: 180px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .qr-section p {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: #3498DB;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #2980B9;
+        }
+        td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        tr:nth-child(even) {
+            background: #ECF0F1;
+        }
+        tr:hover {
+            background: #D5DBDB;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .editable {
+            background: #FFF9C4 !important;
+            min-width: 80px;
+        }
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .maps-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Route A - Pickup Sheet</h1>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <strong>Total Pickups</strong>
+                        <span>2</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Total Trees</strong>
+                        <span>2</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Driver</strong>
+                        <span>_______________</span>
+                    </div>
+                </div>
+                
+                <div class='maps-section'><strong>🗺️ Google Maps Directions:</strong><br><a href='https://www.google.com/maps/dir/105%2C%20Yoakum%2C%20Leander%2C%20TX/133%2C%20King%20Elder%20Ln%2C%20Leander%2C%20TX' target='_blank'>Open Route in Google Maps →</a></div>
+            </div>
+            
+            <div class='qr-section'><img src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAeoAAAHqAQAAAADjFjCXAAAFDElEQVR4nO1dTY6jTAy1TaQsQfoO0Eep3KyVI/UN4Cg5wCfBMhKRR7argMysxjAiCX4Lmr8nSGHZVa/samRYgY7WsAGC7gb5qYKgu0F+qiDobpCfKgi6G+SnCoLuBvmpgqAfuekw4wR4GcoBNgB4gUc+ugxPVy8v8/JukJ8qCPrapkss6GW3ZhlgVMx8Q+R2ODO3eq6+I7d6gfWW7Z7uBbmZiqDv3XTD5L6GEzD3D4Tui1kdHqTbCfiKZ9Zb1CdmxIdzg/zUz6N3GlfrUYKrOsG72N8I+N0DcPuPn/53oL+8P+gv0nSn344ZQNxc0zOmH5RDxePEXQP4h7hH655OQT9009XM6sh00CBmhnxVrzdoXK2kX5f9HzOPr/XyTpCXaAj6Wl/Xof6pdDNi+jkzpv6/0U6nn9OI6XZmVE+4APmfLAj6ka2Op2Puvu7IMOjeCNqlUzenh7y89e1/OwV9Z72umcemGk3vCEkGstm55Y3Kd9CFXrdZyx+TDia/SVeN21r9GjMk67lVDKmvrMNnUp2OYZPoeqrwtW/92yno+zZd11SsIwduZTTRiddT45KAqxG2II8rMuLDuUEHpkPxderhdApCvV45B097NmmhUxUpfB3s+eHoA6yu1T3RgVlDqngzsytzbrJnm3FhpxwR9qBmQxtZXbXwYXke1owwb7SHV65C9Ovgvb87vYByglD3gOl2kg7b4wRQ/48MdTYwTO0o50Q5GZos6cELvDwF/Z2tDrKt3ZFFL5ZpMUAxLugucjg0kC/U48kmzQzx3d2gA9NhVk7KAFVznopKkkcTWSpWScVkFkX06w5qNrSODmo91l9Tk7JBg1xRqS7n3I1Ph3o1rA72/HD0IXS+2tzEA83+rpLfZDl3UwoUfs0a8ku9vAfkYk0I+lpfB0+5JMWlScAVqF6cI2zRUBQRYf2gFVz4EHotpjecLdYiNhpNH5iT18tkGF8b8YS9zsi+zss7QV6iIeh+sMB2NXLaxGv93Nczr5enZcvNHL5uDejAdDCry9U62bgWe3kgm81xMV+Rwupgzw9Hn0Af0MojFJYy3E6ynOUBNGWjtRSv9PJOkJdoCPomTZduiKUAcTa4Knf4NOcuV1VUUZkIYXWbRFiw1DpLnsuZdkuBbqHXVRFhIaxuBThDphuKhZUUlJJLJ5Y4Z5/YPSn6dbAKFHSQGCpl16XOX32dxtoMS16XeuxQiQ1hNqtzTqCSjeacKCrG1OaBrOYBWFpKLtmp5JwgWt4NOjAdil6Xczlnba7IJ3nSImt4Kp/MGspb/3YK+s45J302szm/ZJaPS5idVOLIYN+g5SnoUN8RL6aN5HlYW1hHK/6/zeuJmiJ9PV17xxBN5wYdmA7ZpU25TLk8oqQ72S1zup0gJ9lxRNjDmg2towM/Y1F2aLNkc0JnqYKd4y9Hv+6gZkPbrtXJltAptmZrislydlaFreYo1bK64snlZV7eDfJTBUHfbK1O/BZFTpdOlHpsXdhpMQ87CXmw5dO9IDdTEfS9c076qfZw1ksW5545EWE3aHk6MB1+s7p5NDHPzc5C3rKqgqNfd1yzoY2tjqeszmmdneUsrbq5UIn3/3D0UVmdqWyyhzMzK7P/0xgWwtfRrh+OPmytzoel0XHqtRRbUuukHlvmYcHqsS+nsnjiW/92CvpOTYfx3+u8IDdTEXQ3yE8VBN0N8lMFQXeD/FRB0N0gP1UQdDfIT4WD038BKhTC/dWdny4AAAAASUVORK5CYII=' alt='QR Code for Google Maps'><p>Scan for directions</p></div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th class="text-center">Unit #</th>
+                    <th class="text-center">Trees<br>Expected</th>
+                    <th>Phone</th>
+                    <th class="text-center">Home?<br>(Y/N)</th>
+                    <th>Gate<br>Code</th>
+                    <th>Comments</th>
+                    <th class="text-center">Trees<br>Picked Up</th>
+                    <th class="text-center">Amount<br>Collected</th>
+                    <th class="text-center">Cash/<br>Check</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>Ena</td>
+                <td>105, Yoakum, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>737-424-9183</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>On front porch </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Kathryn Boes</td>
+                <td>133, King Elder Ln, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>2318845181</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>I tried to sign up for the north troop to pick up but the form doesn’t work. It just takes me back to the same page. </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

@@ -4,21 +4,16 @@ Export a single route for drivers.
 
 Generates:
 1. Google Maps URL with all route locations
-2. PDF form with pickup tracking sheet
+2. HTML page with pickup tracking sheet
 """
 
 import sys
 from pathlib import Path
 import pandas as pd
 from urllib.parse import quote
-from reportlab.lib.pagesizes import letter, landscape
-from reportlab.lib.units import inch
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Image
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
 import qrcode
 import qrcode.constants
+import base64
 from io import BytesIO
 
 
@@ -67,8 +62,8 @@ def generate_google_maps_url(route_df: pd.DataFrame, route_name: str) -> str:
     return url
 
 
-def generate_qr_code(url: str) -> Image:
-    """Generate a QR code image from a URL."""
+def generate_qr_code_base64(url: str) -> str:
+    """Generate a QR code as base64 encoded image."""
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -80,163 +75,270 @@ def generate_qr_code(url: str) -> Image:
     
     img = qr.make_image(fill_color="black", back_color="white")
     
-    # Convert PIL image to ReportLab Image
+    # Convert to base64
     buffer = BytesIO()
     img.save(buffer, format='PNG')  # type: ignore
     buffer.seek(0)
+    img_base64 = base64.b64encode(buffer.read()).decode()
     
-    return Image(buffer, width=1.2*inch, height=1.2*inch)
+    return f"data:image/png;base64,{img_base64}"
 
 
-def create_route_pdf(route_df: pd.DataFrame, route_name: str, output_path: str, maps_url: str):
+def create_route_html(route_df: pd.DataFrame, route_name: str, output_path: str, maps_url: str):
     """
-    Create a PDF pickup tracking sheet for drivers.
+    Create an HTML pickup tracking sheet for drivers.
     
     Includes:
     - Route summary with QR code
-    - Google Maps URL
+    - Google Maps link
     - Table with each address and fields for tracking
     """
-    doc = SimpleDocTemplate(output_path, pagesize=landscape(letter),
-                           topMargin=0.5*inch, bottomMargin=0.5*inch,
-                           leftMargin=0.25*inch, rightMargin=0.25*inch)
-    
-    elements = []
-    styles = getSampleStyleSheet()
-    
-    # Title
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=18,
-        textColor=colors.HexColor('#2C3E50'),
-        spaceAfter=12,
-        alignment=TA_CENTER
-    )
-    elements.append(Paragraph(f"<b>Route {route_name} - Pickup Sheet</b>", title_style))
-    elements.append(Spacer(1, 0.2*inch))
-    
     # Route summary
     total_pickups = len(route_df)
     total_trees = int(route_df['Number of Trees'].sum())
     
-    summary_style = ParagraphStyle(
-        'Summary',
-        parent=styles['Normal'],
-        fontSize=11,
-        spaceAfter=6
-    )
+    # Generate QR code as base64
+    qr_code_data = generate_qr_code_base64(maps_url) if maps_url else ""
     
-    # Create header section with QR code and summary side by side
-    if maps_url:
-        qr_img = generate_qr_code(maps_url)
-        
-        # Create a table for header layout (QR code on left, info on right)
-        header_data = [[
-            qr_img,
-            Paragraph(f'''
-                <b>Total Pickups:</b> {total_pickups}<br/>
-                <b>Total Trees:</b> {total_trees}<br/>
-                <b>Driver:</b> _____________<br/>
-                <br/>
-                <b>Scan QR code for Google Maps directions</b>
-            ''', summary_style)
-        ]]
-        
-        header_table = Table(header_data, colWidths=[1.5*inch, 5*inch])
-        header_table.setStyle(TableStyle([
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 0),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-        ]))
-        elements.append(header_table)
-        elements.append(Spacer(1, 0.2*inch))
-    else:
-        elements.append(Paragraph(f"<b>Total Pickups:</b> {total_pickups}", summary_style))
-        elements.append(Paragraph(f"<b>Total Trees:</b> {total_trees}", summary_style))
-        elements.append(Paragraph(f"<b>Driver:</b> _____________", summary_style))
-        elements.append(Spacer(1, 0.2*inch))
-    
-    # Table header
-    table_data = [[
-        'Name',
-        'Address',
-        'Trees\nExpected',
-        'Phone',
-        'Gate\nCode',
-        'Trees\nPicked Up',
-        'Amount\nCollected',
-        'Cash/\nCheck',
-        'Notes'
-    ]]
-    
-    # Add each pickup
+    # Build HTML table rows
+    table_rows = []
     for idx, row in route_df.iterrows():
-        name = str(row['Name'])[:20]  # Truncate long names
-        address = str(row['full_address'])[:35]  # Truncate long addresses
+        name = str(row['Name'])
+        address = str(row['full_address'])
         trees = str(int(row['Number of Trees']))
         
-        # Handle missing phone/gate code (avoid 'nan')
+        # Handle missing values (avoid 'nan')
         phone_raw = row.get('Phone Number', '')
-        phone = '' if pd.isna(phone_raw) or str(phone_raw) == 'nan' else str(phone_raw)[:12]
+        phone = '' if pd.isna(phone_raw) or str(phone_raw) == 'nan' else str(phone_raw)
         
         gate_raw = row.get('Gate Code (required if gated access)', '')
-        gate = '' if pd.isna(gate_raw) or str(gate_raw) == 'nan' else str(gate_raw)[:8]
+        gate = '' if pd.isna(gate_raw) or str(gate_raw) == 'nan' else str(gate_raw)
         
-        table_data.append([
-            name,
-            address,
-            trees,
-            phone,
-            gate,
-            '',  # Trees picked up (blank)
-            '',  # Amount collected (blank)
-            '',  # Cash/Check (blank)
-            ''   # Notes (blank)
-        ])
-    
-    # Create table with wider columns for landscape
-    col_widths = [1.3*inch, 2.2*inch, 0.5*inch, 0.9*inch, 0.6*inch, 0.7*inch, 0.7*inch, 0.6*inch, 1.5*inch]
-    
-    table = Table(table_data, colWidths=col_widths, repeatRows=1)
-    
-    # Style the table
-    table_style = TableStyle([
-        # Header row
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498DB')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 9),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        unit_raw = row.get('Apt. Number', '')
+        unit = '' if pd.isna(unit_raw) or str(unit_raw) == 'nan' else str(unit_raw)
         
-        # Data rows
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
-        ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 8),
-        ('TOPPADDING', (0, 1), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 1), (-1, -1), 4),
+        comments_raw = row.get('Comments', '')
+        comments = '' if pd.isna(comments_raw) or str(comments_raw) == 'nan' else str(comments_raw)
         
-        # Grid
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        home_raw = row.get('Will someone be home', '')
+        home = '' if pd.isna(home_raw) or str(home_raw) == 'nan' else str(home_raw)
         
-        # Alternate row colors
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#ECF0F1')])
-    ])
+        table_rows.append(f"""
+            <tr>
+                <td>{name}</td>
+                <td>{address}</td>
+                <td class="text-center">{unit}</td>
+                <td class="text-center">{trees}</td>
+                <td>{phone}</td>
+                <td class="text-center">{home}</td>
+                <td>{gate}</td>
+                <td>{comments}</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        """)
     
-    table.setStyle(table_style)
-    elements.append(table)
+    # Create HTML document
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route {route_name} - Pickup Sheet</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }}
+        .container {{
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+        .header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3498DB;
+        }}
+        .header-left {{
+            flex: 1;
+        }}
+        h1 {{
+            color: #2C3E50;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }}
+        .summary {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }}
+        .summary-item {{
+            background: #ECF0F1;
+            padding: 12px;
+            border-radius: 5px;
+        }}
+        .summary-item strong {{
+            display: block;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }}
+        .maps-section {{
+            background: #E8F5E9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }}
+        .maps-section a {{
+            color: #2E7D32;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }}
+        .maps-section a:hover {{
+            text-decoration: underline;
+        }}
+        .qr-section {{
+            text-align: center;
+            padding: 10px;
+        }}
+        .qr-section img {{
+            width: 180px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }}
+        .qr-section p {{
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }}
+        th {{
+            background: #3498DB;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #2980B9;
+        }}
+        td {{
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }}
+        tr:nth-child(even) {{
+            background: #ECF0F1;
+        }}
+        tr:hover {{
+            background: #D5DBDB;
+        }}
+        .text-center {{
+            text-align: center;
+        }}
+        .editable {{
+            background: #FFF9C4 !important;
+            min-width: 80px;
+        }}
+        @media print {{
+            body {{
+                padding: 0;
+                background: white;
+            }}
+            .container {{
+                box-shadow: none;
+                padding: 20px;
+            }}
+            .maps-section {{
+                page-break-inside: avoid;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Route {route_name} - Pickup Sheet</h1>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <strong>Total Pickups</strong>
+                        <span>{total_pickups}</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Total Trees</strong>
+                        <span>{total_trees}</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Driver</strong>
+                        <span>_______________</span>
+                    </div>
+                </div>
+                
+                {"<div class='maps-section'><strong>🗺️ Google Maps Directions:</strong><br><a href='" + maps_url + "' target='_blank'>Open Route in Google Maps →</a></div>" if maps_url else ""}
+            </div>
+            
+            {"<div class='qr-section'><img src='" + qr_code_data + "' alt='QR Code for Google Maps'><p>Scan for directions</p></div>" if maps_url else ""}
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th class="text-center">Unit #</th>
+                    <th class="text-center">Trees<br>Expected</th>
+                    <th>Phone</th>
+                    <th class="text-center">Home?<br>(Y/N)</th>
+                    <th>Gate<br>Code</th>
+                    <th>Comments</th>
+                    <th class="text-center">Trees<br>Picked Up</th>
+                    <th class="text-center">Amount<br>Collected</th>
+                    <th class="text-center">Cash/<br>Check</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {''.join(table_rows)}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
+"""
     
-    # Build PDF
-    doc.build(elements)
-    print(f"  ✓ PDF created: {output_path}")
+    # Write HTML file
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(html)
+    
+    print(f"  ✓ HTML created: {output_path}")
 
 
 def export_route(route_name: str, csv_path: str, output_dir: str = None):
-    """Export a single route with maps URL and PDF."""
+    """Export a single route with maps URL and HTML."""
     # Load data
     df = load_routes(csv_path)
     
@@ -265,20 +367,20 @@ def export_route(route_name: str, csv_path: str, output_dir: str = None):
     print(f"Trees: {int(route_df['Number of Trees'].sum())}")
     
     # Generate Google Maps URL
-    print("\nGenerating Google Maps URL and PDF...")
+    print("\nGenerating Google Maps URL and HTML...")
     maps_url = generate_google_maps_url(route_df, route_name)
     
-    # Generate PDF
-    pdf_file = output_path / f"Route-{route_name}-PickupSheet.pdf"
-    create_route_pdf(route_df, route_name, str(pdf_file), maps_url)
+    # Generate HTML
+    html_file = output_path / f"Route-{route_name}.html"
+    create_route_html(route_df, route_name, str(html_file), maps_url)
     
     print(f"\n{'='*60}")
     print(f"✓ Route {route_name} exported successfully!")
     print(f"{'='*60}")
     print(f"\nFile created in: {output_dir}/")
-    print(f"  - Route-{route_name}-PickupSheet.pdf")
-    print(f"\nTo open the PDF:")
-    print(f"  open {pdf_file}")
+    print(f"  - Route-{route_name}.html")
+    print(f"\nTo open the HTML:")
+    print(f"  open {html_file}")
 
 
 def main():
@@ -311,7 +413,8 @@ def main():
         print(f"\n{'='*60}")
         print(f"✓ ALL ROUTES EXPORTED SUCCESSFULLY!")
         print(f"{'='*60}")
-        print(f"\nFiles saved in: data/route-exports/")
+        year = '2026' if '2026' in csv_path else '2025'
+        print(f"\nFiles saved in: ../website/routes/{year}/")
         sys.exit(0)
     
     # Get route name from command line

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route O - Pickup Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3498DB;
+        }
+        .header-left {
+            flex: 1;
+        }
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: #ECF0F1;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .summary-item strong {
+            display: block;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+        .maps-section {
+            background: #E8F5E9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .maps-section a {
+            color: #2E7D32;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .maps-section a:hover {
+            text-decoration: underline;
+        }
+        .qr-section {
+            text-align: center;
+            padding: 10px;
+        }
+        .qr-section img {
+            width: 180px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .qr-section p {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: #3498DB;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #2980B9;
+        }
+        td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        tr:nth-child(even) {
+            background: #ECF0F1;
+        }
+        tr:hover {
+            background: #D5DBDB;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .editable {
+            background: #FFF9C4 !important;
+            min-width: 80px;
+        }
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .maps-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Route O - Pickup Sheet</h1>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <strong>Total Pickups</strong>
+                        <span>3</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Total Trees</strong>
+                        <span>3</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Driver</strong>
+                        <span>_______________</span>
+                    </div>
+                </div>
+                
+                <div class='maps-section'><strong>🗺️ Google Maps Directions:</strong><br><a href='https://www.google.com/maps/dir/2560%2C%20Grey%20Mountain%20Pass%2C%20Leander%2C%20TX/2621%2C%20Great%20Owl%20Pass%2C%20Leander%2C%20TX/2917%2C%20Whalesong%20Way%2C%20Leander%2C%20TX' target='_blank'>Open Route in Google Maps →</a></div>
+            </div>
+            
+            <div class='qr-section'><img src='data:image/png;base64,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' alt='QR Code for Google Maps'><p>Scan for directions</p></div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th class="text-center">Unit #</th>
+                    <th class="text-center">Trees<br>Expected</th>
+                    <th>Phone</th>
+                    <th class="text-center">Home?<br>(Y/N)</th>
+                    <th>Gate<br>Code</th>
+                    <th>Comments</th>
+                    <th class="text-center">Trees<br>Picked Up</th>
+                    <th class="text-center">Amount<br>Collected</th>
+                    <th class="text-center">Cash/<br>Check</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>Melinda Monaghan</td>
+                <td>2560, Grey Mountain Pass, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>530-263-7912</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Tom Clark</td>
+                <td>2621, Great Owl Pass, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5124684800</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Jen Hatch</td>
+                <td>2917, Whalesong Way, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>4353131288</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>Tree on side of house . Money under front porch mat </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

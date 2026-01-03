@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route V - Pickup Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3498DB;
+        }
+        .header-left {
+            flex: 1;
+        }
+        h1 {
+            color: #2C3E50;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            background: #ECF0F1;
+            padding: 12px;
+            border-radius: 5px;
+        }
+        .summary-item strong {
+            display: block;
+            color: #2C3E50;
+            margin-bottom: 5px;
+        }
+        .maps-section {
+            background: #E8F5E9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .maps-section a {
+            color: #2E7D32;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .maps-section a:hover {
+            text-decoration: underline;
+        }
+        .qr-section {
+            text-align: center;
+            padding: 10px;
+        }
+        .qr-section img {
+            width: 180px;
+            height: 180px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
+        }
+        .qr-section p {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: #3498DB;
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #2980B9;
+        }
+        td {
+            padding: 10px 8px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        tr:nth-child(even) {
+            background: #ECF0F1;
+        }
+        tr:hover {
+            background: #D5DBDB;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .editable {
+            background: #FFF9C4 !important;
+            min-width: 80px;
+        }
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .maps-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>Route V - Pickup Sheet</h1>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <strong>Total Pickups</strong>
+                        <span>10</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Total Trees</strong>
+                        <span>10</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>Driver</strong>
+                        <span>_______________</span>
+                    </div>
+                </div>
+                
+                <div class='maps-section'><strong>🗺️ Google Maps Directions:</strong><br><a href='https://www.google.com/maps/dir/2225%2C%20Rocoso%20Trl.%20%2C%20Leander%2C%20TX/2213%2C%20Rocoso%20Trl%2C%20Leander%2C%20TX/1310%2C%20Hensley%2C%20Leander%2C%20TX/2632%2C%20Grizzly%20Way%20%2C%20Leander%2C%20TX/1108%2C%20Hartman%20%2C%20Leander%2C%20TX/1600%2C%20Devine%20Lake%20Bend%2C%20Leander%2C%20TX/2221%2C%20Devine%20Lake%20Bend%2C%20Leander%2C%20TX/1337%2C%20Ivy%20Arbor%20Ln%2C%20Leander%2C%20TX/1336%2C%20Deering%20Creek%20Dr%2C%20Leander%2C%20TX/1616%2C%20Longhorn%20Ranch%20Dr%2C%20Leander%2C%20TX' target='_blank'>Open Route in Google Maps →</a></div>
+            </div>
+            
+            <div class='qr-section'><img src='data:image/png;base64,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' alt='QR Code for Google Maps'><p>Scan for directions</p></div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th class="text-center">Unit #</th>
+                    <th class="text-center">Trees<br>Expected</th>
+                    <th>Phone</th>
+                    <th class="text-center">Home?<br>(Y/N)</th>
+                    <th>Gate<br>Code</th>
+                    <th>Comments</th>
+                    <th class="text-center">Trees<br>Picked Up</th>
+                    <th class="text-center">Amount<br>Collected</th>
+                    <th class="text-center">Cash/<br>Check</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td>Kristin Williamson </td>
+                <td>2225, Rocoso Trl. , Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>7608899139</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Renee Vitale</td>
+                <td>2213, Rocoso Trl, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>7038594190</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>If not under doormat, knock on door</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Amy Nutt</td>
+                <td>1310, Hensley, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>7135780849</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Julie Hsu</td>
+                <td>2632, Grizzly Way , Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>714-651-3888 </td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>In a plastic bag on taped to our front door </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Melissa Solis</td>
+                <td>1108, Hartman , Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5126239990</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td>On door</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Michael Morigi</td>
+                <td>1600, Devine Lake Bend, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>2145344900</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>Tree by curb and payment attached to tree</td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Jordan Woodward </td>
+                <td>2221, Devine Lake Bend, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5208912125</td>
+                <td class="text-center">Yes</td>
+                <td>No gate</td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Charles Davila</td>
+                <td>1337, Ivy Arbor Ln, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5124357049</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Sean Whitehead</td>
+                <td>1336, Deering Creek Dr, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>5126954099</td>
+                <td class="text-center">Yes</td>
+                <td></td>
+                <td></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            <tr>
+                <td>Ryan Reyes </td>
+                <td>1616, Longhorn Ranch Dr, Leander, TX</td>
+                <td class="text-center"></td>
+                <td class="text-center">1</td>
+                <td>6264871724</td>
+                <td class="text-center">No</td>
+                <td></td>
+                <td>Tree will be in front. Envelope with cash will be under floor mat near front door </td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+                <td class="editable"></td>
+            </tr>
+        
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

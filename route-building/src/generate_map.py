@@ -155,6 +155,10 @@ def create_route_map(df: pd.DataFrame, output_path: str = '../website/routes/202
     print("  Converting to use local resources...")
     convert_to_local_resources(output_path)
     
+    # Add route links to the HTML
+    print("  Adding route links to layer control...")
+    add_route_links(output_path, routes)
+    
     print(f"\n✓ Map saved to: {output_path}")
     
     # Print route summary
@@ -196,6 +200,78 @@ def convert_to_local_resources(html_path: str):
         else:
             # Remove the line entirely
             html = re.sub(f'.*{re.escape(cdn_url)}.*\n', '', html)
+    
+    # Write back
+    with open(html_path, 'w', encoding='utf-8') as f:
+        f.write(html)
+
+
+def add_route_links(html_path: str, routes: list):
+    """Add clickable links to route HTML files in the layer control."""
+    with open(html_path, 'r', encoding='utf-8') as f:
+        html = f.read()
+    
+    # Add JavaScript to enhance the layer control with links
+    # This script runs after the map loads and adds links next to each route checkbox
+    script = """
+    <script>
+        // Wait for map to be fully loaded
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                // Find all layer control labels
+                var labels = document.querySelectorAll('.leaflet-control-layers-overlays label');
+                
+                labels.forEach(function(label) {
+                    // Check if link already exists in this label to prevent duplicates
+                    if (label.querySelector('a')) {
+                        return; // Skip if link already added
+                    }
+                    
+                    // Get the text content of the label
+                    var labelText = label.textContent.trim();
+                    // Extract route letter(s) from "Route X" format
+                    var match = labelText.match(/Route ([A-Z]+)/);
+                    if (match && match[1]) {
+                        var routeLetter = match[1];
+                        
+                        // Find the span that contains the route text (not the outer span)
+                        var spans = label.querySelectorAll('span');
+                        var targetSpan = null;
+                        for (var i = 0; i < spans.length; i++) {
+                            if (spans[i].textContent.includes('Route ' + routeLetter)) {
+                                targetSpan = spans[i];
+                                break;
+                            }
+                        }
+                        
+                        if (targetSpan) {
+                            // Create a link element
+                            var link = document.createElement('a');
+                            link.href = 'Route-' + routeLetter + '.html';
+                            link.innerHTML = '&#x1F517;';  // Link emoji as HTML entity
+                            link.title = 'View pickup sheet for Route ' + routeLetter;
+                            link.style.marginLeft = '8px';
+                            link.style.textDecoration = 'none';
+                            link.style.fontSize = '16px';
+                            link.target = '_blank';
+                            
+                            // Prevent the link from triggering the checkbox
+                            link.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                            });
+                            
+                            // Add the link after the route name in the target span
+                            targetSpan.appendChild(link);
+                        }
+                    }
+                });
+            }, 500);
+        });
+    </script>
+    """
+    
+    # Insert the script before the closing </body> tag
+    html = html.replace('</body>', script + '\n</body>')
     
     # Write back
     with open(html_path, 'w', encoding='utf-8') as f:
